@@ -8,9 +8,8 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import pro.lurk.command.Calculator;
+import pro.lurk.util.ConfigLoader;
 
 public class Bot {
 	private static JDA api;
