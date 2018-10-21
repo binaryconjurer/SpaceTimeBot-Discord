@@ -1,51 +1,70 @@
 package pro.lurk.SpaceTime;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.Scanner;
 
+// Improved Config Loader, much cleaner then previous design.
+// Could still use improvement in the future.
+
 public class ConfigLoader {
 
-	// Config File
-	File config = new File("config/token.cfg");
+	protected Properties prop = new Properties();
+	private String token;
 
-	//
+	public ConfigLoader() {
+		load();
+	}
 
-	private String TOKEN;
-
-	public ConfigLoader() throws IOException {
-
-		if (!config.isFile() && !config.createNewFile()) {
-			throw new IOException("Error creating new file: " + config.getAbsolutePath());
-		}
-
-		BufferedReader r = new BufferedReader(new FileReader(config));
+	private void load() {
+		InputStream input = null;
 		try {
-			// read data
-			readToken();
+			File config = new File("config/config.properties");
+
+			// If config doesn't exist make a new one and ask user for bot token
+			if (!config.exists()) {
+				config.createNewFile();
+				FileOutputStream oFile = new FileOutputStream(config, false);
+
+				input = new FileInputStream(config);
+				prop.load(input);
+
+				System.out.println("Please enter in your Discord Bot token in order to login!");
+				Scanner scan = new Scanner(System.in);
+				token = scan.nextLine();
+				scan.close();
+				prop.put("token", token);
+				System.out.println("Token has been recieved, saving...");
+				prop.store(oFile, null);
+				oFile.close();
+				load();
+			} else {
+				input = new FileInputStream(config);
+				// load a properties file
+				prop.load(input);
+			}
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			System.out.println("config.properties not found, please make a new one and include token=token");
 		} finally {
-			r.close();
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-
 	}
-	// Gets the token from the config file
-	private void readToken() {
-		try (FileReader reader = new FileReader(config)) {
-			Properties prop = new Properties();
-			prop.load(reader);
-			this.TOKEN = prop.getProperty("token");
-		} catch (Exception e) {
-			e.printStackTrace();
 
-		}
-
-		//return TOKEN;
-	}
-	// Gets the token from object
+	// Returns token
 	public String getToken() {
-		return TOKEN;
+		return prop.getProperty("token");
 	}
+
 }
