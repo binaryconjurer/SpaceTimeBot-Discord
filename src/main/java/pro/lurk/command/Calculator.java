@@ -1,168 +1,77 @@
-package pro.lurk.SpaceTime;
+package pro.lurk.command;
 
 import java.awt.Color;
-import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
-public class Calculator extends ListenerAdapter {
-	// Command prefix
-	public static final String prefix = "!";
-	public static int prefixL = prefix.length();
-	public static final int prefixLength = prefixL - 1;
-
+public class Calculator extends Command {
 	// Pet Stats
 	public int strength;
 	public int intellect;
 	public int agility;
 	public int will;
 	public int power;
+	
+	private static String title[] = {"By Thetechman","https://twitter.com/binaryconjurer"};
+	private static String description = "Below you will see the values of nearly every talent in the game based upon the stats you have entered!";
+	private static String[] author = {"Wizard101 Pet Stat Calculator","https://i.imgur.com/AvgpKtj.png"};
 
-	// Arrays and stray String
-	int nums[] = { strength, intellect, agility, will, power };
-	public static String split[];
-	public static String numbers;
-
-	// Sees if String is only numbers
-	static Pattern numPattern = Pattern.compile("\\d+");
+	String petSyntaxError = ". The !stat command requires you to specify Strength, Intellect, Agility, Will, and Power."
+			+ "\nExample: !stats 255 250 " + "260 " + "260 " + "250";
 
 	@Override
-	public void onMessageReceived(MessageReceivedEvent event) {
-		if (event.getAuthor().isBot())
-			return;
-		// We don't want to respond to other bot accounts, including ourself
-		Message message = event.getMessage();
-		String content = message.getContentRaw();
-		// getContentRaw() is an atomic getter
-		// getContentDisplay() is a lazy getter which modifies the content for e.g.
-		// console view (strip discord formatting)
-
-		// if (content.equals("!ping"))
-		// {
-		// MessageChannel channel = event.getChannel();
-		// channel.sendMessage("Pong!").queue(); // Important to call .queue() on the
-		// RestAction returned by sendMessage(...)
-		// }
-
-		// Catches all commands based on prefix
-		if (content.startsWith(prefix)) {
-			MessageChannel channel = event.getChannel();
-			// !stats section for Pet Calulator, tons of baka proofing
-			if (channel.getId().equals("443135403571281920") || channel.getId().equals("442845504813137921")) {
-				if (content.startsWith(prefix + "stats")) {
-					String petSyntaxError = ". The !stat command requires you to specify Strength, Intellect, Agility, Will, and Power."
-							+ "\nExample: !stats 255 250 " + "260 " + "260 " + "250";
-					// If the command is exactly !stats
-					// appears to also work if a space was added.
-					// Returns sytax error
-					if (content.equals(prefix + "stats")) {
-
-						Member member = event.getMember();
-
-						channel.sendMessage(member.getAsMention() + petSyntaxError).queue();
-
-						// If the user has input more then just !stats
-					} else if (content.startsWith(prefix + "stats ")) {
-						// Gets rid of prefix and stats leaving with remaining contents
-						numbers = content.substring(prefixLength + 7);
-						// Splits up all the hopefully numbers into an array
-						String split[] = numbers.split(" ");
-
-						// Checks if there are more then 5 elements, if so pop out an error message.
-						if (split.length > 5 || split.length < 5) {
-
-							Member member = event.getMember();
-							channel.sendMessage(member.getAsMention() + petSyntaxError).queue();
-						}
-						// If a user inputs non numbers they get an error.
-						else if (!isNumber(split)) {
-							// System.out.println("FALSE YOU BAKA!");
-
-							Member member = event.getMember();
-							channel.sendMessage(member.getAsMention() + petSyntaxError).queue();
-						}
-						// Checks if the content in the String Array are all numbers, if so convert to
-						// number array num
-						else if (isNumber(split)) {
-							stringToInt(split);
-							// System.out.println("TEST");
-
-							// If there are exactly 5 first check if they are negative or zero.
-							if (nums.length == 5) {
-								// Checks if there are any numbers containing zero or negative.
-								// If so pop an error message
-								if (isPositive(nums) == false) {
-
-									Member member = event.getMember();
-									channel.sendMessage(member.getAsMention() + petSyntaxError).queue();
-								}
-								// After checking that the user actually entered the proper syntax may info rain
-								// upon all!
-								else {
-									// Assigns the stats from the array to the regular variables to be passed to
-									// PetCalculations
-									// Transfers the String numbers into real numbers in nums array
-
-									strength = nums[0];
-									intellect = nums[1];
-									agility = nums[2];
-									will = nums[3];
-									power = nums[4];
-
-									// We get the current channel, then print the message after formatting it! Hype
-									// with all the emotes!
-									// Note to self: Add
-
-									channel.sendMessage(PetEmbed().build()).queue();
-								}
-							}
-						}
-					}
+	public void onCommand(MessageReceivedEvent e, String[] args) {
+		MessageChannel channel = e.getChannel();
+		Member member = e.getMember();
+		if (channel.getId().equals("503450510418903040")) {
+			if (args.length == 6) {
+				Optional<List<Integer>> stats = formatStats(args);
+				if (stats.isPresent()) {
+					// Assigns the stats from the array to the regular variables to be passed to
+					// PetCalculations
+					// Transfers the String numbers into real numbers in nums array
+					strength = stats.get().get(0);
+					intellect = stats.get().get(1);
+					agility = stats.get().get(2);
+					will = stats.get().get(3);
+					power = stats.get().get(4);
+					// We get the current channel, then print the message after formatting it! Hype
+					// with all the emotes!
+					// Note to self: Add
+					channel.sendMessage(PetEmbed().build()).queue();
 				}
+			} else {
+				channel.sendMessage(member.getAsMention() + petSyntaxError).queue();
 			}
 
 		}
 	}
 
-	// Checks if numbers in an array are positive
-	public boolean isPositive(int[] nums) {
-		for (int i : nums) {
-			if (i <= 0) {
-				return false;
-			}
-		}
-		return true;
+	private static Optional<List<Integer>> formatStats(String[] args) {
+		List<Integer> result = Arrays.stream(args) // convert the array to a stream
+				.skip(1) // ignore the first element, which isn't part of what we're validating
+				// .limit(5) // inspect only the next 5 elements
+				.filter(s -> s.matches("\\A\\d{1,3}\\z")).map(Integer::parseInt).collect(Collectors.toList()); // ensure
+																												// everything
+																												// remaining
+																												// matches
+		return result.size() == 5 ? Optional.of(result) : Optional.empty();
 	}
 
-	// Checks if there are just numbers in the split array
-	public static boolean isNumber(String split[]) {
-		int counter = 0;
-		for (String str : split) {
-			if (numPattern.matcher(str).matches()) {
-				counter++;
-			}
-		}
-		if (counter == split.length) {
-			return true;
-		}
-		return false;
-
-	}
-
-	// Converts String Numbers to Ints
-	public void stringToInt(String[] split) {
-		if (!(split.length > 5 || split.length == 0)) {
-			for (int i = 0; i < split.length; i++) {
-				nums[i] = Integer.parseInt(split[i]);
-			}
-		}
-	}
+	/*
+	 * private boolean checkNumbers(String[] args) { boolean result =
+	 * Arrays.stream(args) // convert the array to a stream .skip(1) // ignore the
+	 * first element, which isn't part of what we're validating .limit(5) // inspect
+	 * only the next 5 elements .allMatch(s -> s.matches("\\A\\d{1,3}\\z")); //
+	 * ensure everything remaining matches return result; }
+	 */
 
 	// Formats the text all the pet talent value text into a readable format. Praise
 	// Wampus!
@@ -171,29 +80,16 @@ public class Calculator extends ListenerAdapter {
 
 		EmbedBuilder embed = new EmbedBuilder();
 		PetCalculations pc = new PetCalculations(strength, intellect, agility, will, power);
-		/*
-		 * Set the title: 1. Arg: title as string 2. Arg: URL as string or could also be
-		 * null
-		 */
-		embed.setTitle("By Thetechman", "https://twitter.com/binaryconjurerv");
-
-		/*
-		 * Set the color
-		 */
-		embed.setColor(Color.red);
+		
+		
+		
+		
+		embed.setTitle(title[0], title[1]);
 		embed.setColor(new Color(0xFF6419));
-		embed.setColor(new Color(255, 100, 25));
+		embed.setDescription(description);
+		embed.setAuthor(author[0], null, author[1]);
 
-		/*
-		 * Set the text of the Embed: Arg: text as string
-		 */
-		embed.setDescription(
-				"Below you will see the values of nearly every talent in the game based upon the stats you have entered!");
 
-		/*
-		 * Add fields to embed: 1. Arg: title as string 2. Arg: text as string 3. Arg:
-		 * inline mode true / false
-		 */
 		// All of the Talents!!
 		// Dealer
 		embed.addField("Dealer:", "" + pc.getDealer() + " (" + Math.round(pc.getDealer()) + "%)", true);
@@ -232,7 +128,8 @@ public class Calculator extends ListenerAdapter {
 		// Healthy
 		embed.addField("Healthy:", "" + pc.getHealthy() + " (" + Math.round(pc.getHealthy()) + "%)", true);
 		// Armor Breaker
-		embed.addField("Armor Breaker:", "" + pc.getArmorBreaker() + " (" + Math.round(pc.getArmorBreaker()) + "%)", true);
+		embed.addField("Armor Breaker:", "" + pc.getArmorBreaker() + " (" + Math.round(pc.getArmorBreaker()) + "%)",
+				true);
 		// Armor Piercer
 		embed.addField("Armor Piercer:", "" + pc.getArmorPiercer() + " (" + Math.round(pc.getArmorPiercer()) + "%)",
 				true);
@@ -243,53 +140,30 @@ public class Calculator extends ListenerAdapter {
 		embed.addField("Stun Resistant:", "" + pc.getStunResistant() + " (" + Math.round(pc.getStunResistant()) + "%)",
 				true);
 		// Fishing Luck
-				embed.addField("Fishing Luck:", "" + pc.getFishingLuck() + " (" + Math.round(pc.getFishingLuck()) + "%)",
-						true);
-		/*
-		 * // Add Health embed.addField("Add Health:", "" + pc.getAddHealth() + " (" +
-		 * Math.round(pc.getAddHealth()) + "%)", false); // Health Boost
-		 * embed.addField("Health Boost:", "" + pc.getHealthBoost() + " (" +
-		 * Math.round(pc.getHealthBoost()) + "%)", false); // Health Gift
-		 * embed.addField("Health Gift:", "" + pc.getHealthGift() + " (" +
-		 * Math.round(pc.getHealthGift()) + "%)", false); // Health Bounty
-		 * embed.addField("Health Bounty:", "" + pc.getHealthBounty() + " (" +
-		 * Math.round(pc.getHealthBounty()) + "%)", false); // Extra Mana
-		 * embed.addField("Extra Mana:", "" + pc.getExtraMana() + " (" +
-		 * Math.round(pc.getExtraMana()) + "%)", false); // Mana Boost
-		 * embed.addField("Mana Boost:", "" + pc.getManaBoost() + " (" +
-		 * Math.round(pc.getManaBoost()) + "%)", false); // Mana Bounty
-		 * embed.addField("Mana Bounty:", "" + pc.getManaBounty() + " (" +
-		 * Math.round(pc.getManaBounty()) + "%)", false); // Mana Gift
-		 * embed.addField("Mana Gift:", "" + pc.getManaGift() + " (" +
-		 * Math.round(pc.getManaGift()) + "%)", false);
-		 */
-		/*
-		 * Add spacer like field Arg: inline mode true / false
-		 */
-		// embed.addBlankField(false);
-
-		/*
-		 * Add embed author: 1. Arg: name as string 2. Arg: url as string (can be null)
-		 * 3. Arg: icon url as string (can be null)
-		 */
-		embed.setAuthor("Wizard101 Pet Stat Calculator", null, "https://i.imgur.com/AvgpKtj.png");
-
-		/*
-		 * Set footer: 1. Arg: text as string 2. icon url as string (can be null)
-		 */
-		// embed.setFooter("Text", "https://i.imgur.com/Sxfywla.png");
-
-		/*
-		 * Set image: Arg: image url as string
-		 */
-		// embed.setImage("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png");
-
-		/*
-		 * Set thumbnail image: Arg: image url as string
-		 */
-		// embed.setThumbnail("https://i.imgur.com/dHj40UZ.png");
+		embed.addField("Fishing Luck:", "" + pc.getFishingLuck() + " (" + Math.round(pc.getFishingLuck()) + "%)", true);
 
 		return embed;
+	}
+
+	@Override
+	public List<String> getAliases() {
+		return Arrays.asList("!stats", "!calc");
+	}
+
+	@Override
+	public String getDescription() {
+		return "Used to get the values of pet talents based on given stats.";
+	}
+
+	@Override
+	public String getName() {
+		return "Wizard101 Pet Calaculator";
+	}
+
+	@Override
+	public List<String> getUsageInstructions() {
+		return Arrays.asList("\n`.stats` - Find pet talent vaules\n\n"
+				+ "`.stats [strength] [intellect] [agility] [will] [power] ` - intended use");
 	}
 
 }
