@@ -18,10 +18,10 @@ public class Calculator extends Command {
 	public int agility;
 	public int will;
 	public int power;
-	
-	private static String title[] = {"By Thetechman","https://twitter.com/binaryconjurer"};
+
+	private static String title[] = { "By Thetechman", "https://twitter.com/binaryconjurer" };
 	private static String description = "Below you will see the values of nearly every talent in the game based upon the stats you have entered!";
-	private static String[] author = {"Wizard101 Pet Stat Calculator","https://i.imgur.com/AvgpKtj.png"};
+	private static String[] author = { "Wizard101 Pet Stat Calculator", "https://i.imgur.com/AvgpKtj.png" };
 
 	String petSyntaxError = ". The !stat command requires you to specify Strength, Intellect, Agility, Will, and Power."
 			+ "\nExample: !stats 255 250 " + "260 " + "260 " + "250";
@@ -80,15 +80,11 @@ public class Calculator extends Command {
 
 		EmbedBuilder embed = new EmbedBuilder();
 		PetCalculations pc = new PetCalculations(strength, intellect, agility, will, power);
-		
-		
-		
-		
+
 		embed.setTitle(title[0], title[1]);
 		embed.setColor(new Color(0xFF6419));
 		embed.setDescription(description);
 		embed.setAuthor(author[0], null, author[1]);
-
 
 		// All of the Talents!!
 		// Dealer
@@ -147,7 +143,7 @@ public class Calculator extends Command {
 
 	@Override
 	public List<String> getAliases() {
-		return Arrays.asList("!stats", "!calc");
+		return Arrays.asList(".stats", ".calc");
 	}
 
 	@Override
