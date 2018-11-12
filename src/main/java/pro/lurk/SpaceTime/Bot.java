@@ -8,9 +8,9 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import pro.lurk.command.Calculator;
+import pro.lurk.util.ConfigLoader;
+import pro.lurk.command.HelpCommand;
 
 public class Bot {
 	private static JDA api;
@@ -33,7 +33,9 @@ public class Bot {
 			// Set initial game playing
 			jdaBuilder.setGame(Game.playing("Time Travel!"));
 			// Setup Event Listeners
-			jdaBuilder.addEventListener(new Calculator());
+			HelpCommand help = new HelpCommand();
+			jdaBuilder.addEventListener(help.registerCommand(help));
+			jdaBuilder.addEventListener(help.registerCommand(new Calculator()));
 			// Finally build
 			api = jdaBuilder.build();
 			api.awaitReady();

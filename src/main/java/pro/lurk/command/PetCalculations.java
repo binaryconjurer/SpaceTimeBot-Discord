@@ -1,13 +1,13 @@
-package pro.lurk.SpaceTime;
+package pro.lurk.command;
 
 public class PetCalculations {
 
 	// Pet Stats
-	private static double strength;
-	private static double intellect;
-	private static double agility;
-	private static double will;
-	private static double power;
+	private final double strength;
+	private final double intellect;
+	private final double agility;
+	private final double will;
+	private final double power;
 
 	// Talent Values
 	private double dealer;
@@ -31,19 +31,19 @@ public class PetCalculations {
 	private double stunRecalcitrant;
 	private double stunResistant;
 	private double fishingLuck;
-	private double addHealth;
-	private double healthBoost;
-	private double healthGift;
-	private double healthBounty;
-	private double extraMana;
-	private double manaBoost;
-	private double manaBounty;
-	private double manaGift;
+	// private double addHealth;
+	// private double healthBoost;
+	// private double healthGift;
+	// private double healthBounty;
+	// private double extraMana;
+	// private double manaBoost;
+	// private double manaBounty;
+	// private double manaGift;
 
 	// Fill in the rest of talents later :P
 
 	// Constructure inputs pet stats into object
-	public PetCalculations(int strength, double intellect, double agility, double will, double power) {
+	public PetCalculations(double strength, double intellect, double agility, double will, double power) {
 		// Inputting the pet's stats to the object
 		this.strength = strength;
 		this.intellect = intellect;
@@ -74,14 +74,12 @@ public class PetCalculations {
 		findStunRecalcitrant();
 		findStunResistant();
 		findFishingLuck();
-		// The health/mana talents are inactive as it takes too much space and rather useless in most cases, we have !petcalc for that
-/*		findAddHealth();
-		findHealthBoost();
-		findHealthBounty();
-		findExraMana();
-		findManaBoost();
-		findManaBounty();
-		findManaGift();*/
+		/*
+		 * The health/mana talents are inactive as it takes too much space and rather
+		 * useless in most cases, we have !petcalc for that findAddHealth();
+		 * findHealthBoost(); findHealthBounty(); findExraMana(); findManaBoost();
+		 * findManaBounty(); findManaGift();
+		 */
 
 	}
 
@@ -91,7 +89,6 @@ public class PetCalculations {
 	// Dealer Calculation
 	public void findDealer() {
 		dealer = (((strength * 2) + (will * 2) + power) * 3 / 400);
-		// System.out.println("MANDERS " + dealer);
 	}
 
 	// Giver Calculation
@@ -166,12 +163,12 @@ public class PetCalculations {
 	private void findLively() {
 		lively = (((intellect * 2) + (agility * 2) + power) * 13 / 2000);
 	}
-	
+
 	// Lively
-		private void findHealthy() {
-			healthy = (((intellect * 2) + (agility * 2) + power) * 3 / 1000);
-		}
-	
+	private void findHealthy() {
+		healthy = (((intellect * 2) + (agility * 2) + power) * 3 / 1000);
+	}
+
 	// Armor Breaker
 	private void findArmorBreaker() {
 		armorBreaker = (((strength * 2) + (agility * 2) + power) / 400);
@@ -196,46 +193,33 @@ public class PetCalculations {
 	private void findFishingLuck() {
 		fishingLuck = (((intellect * 2) + (will * 2) + power) / 400);
 	}
-	
+
 	// Add Health
-/*	private void findAddHealth() {
-		addHealth = (((agility * 2) + (will * 2) + power) * 3 / 50);
-	}
-
-	// Health Boost
-	private void findHealthBoost() {
-		healthBoost = (((agility * 2) + (will * 2) + power) * 3 / 50);
-	}
-
-	// Health Gift
-	private void findHealthGift() {
-		healthGift = (((intellect * 2) + (will * 2) + power) / 10);
-	}
-
-	// Health Bounty
-	private void findHealthBounty() {
-		healthBounty = (((agility * 2) + (will * 2) + power) * 3 / 25);
-	}
-
-	// Extra Mana
-	private void findExraMana() {
-		extraMana = (((intellect * 2) + (will * 2) + power) / 25);
-	}
-
-	// Mana Boost
-	private void findManaBoost() {
-		manaBoost = (((intellect * 2) + (will * 2) + power) * 3 / 50);
-	}
-
-	// Mana Bounty
-	private void findManaBounty() {
-		manaBounty = (((intellect * 2) + (will * 2) + power) * 3 / 10);
-	}
-
-	// Mana Gift
-	private void findManaGift() {
-		manaGift = (((intellect * 2) + (will * 2) + power) * 6 / 75);
-	}*/
+	/*
+	 * private void findAddHealth() { addHealth = (((agility * 2) + (will * 2) +
+	 * power) * 3 / 50); }
+	 * 
+	 * // Health Boost private void findHealthBoost() { healthBoost = (((agility *
+	 * 2) + (will * 2) + power) * 3 / 50); }
+	 * 
+	 * // Health Gift private void findHealthGift() { healthGift = (((intellect * 2)
+	 * + (will * 2) + power) / 10); }
+	 * 
+	 * // Health Bounty private void findHealthBounty() { healthBounty = (((agility
+	 * * 2) + (will * 2) + power) * 3 / 25); }
+	 * 
+	 * // Extra Mana private void findExraMana() { extraMana = (((intellect * 2) +
+	 * (will * 2) + power) / 25); }
+	 * 
+	 * // Mana Boost private void findManaBoost() { manaBoost = (((intellect * 2) +
+	 * (will * 2) + power) * 3 / 50); }
+	 * 
+	 * // Mana Bounty private void findManaBounty() { manaBounty = (((intellect * 2)
+	 * + (will * 2) + power) * 3 / 10); }
+	 * 
+	 * // Mana Gift private void findManaGift() { manaGift = (((intellect * 2) +
+	 * (will * 2) + power) * 6 / 75); }
+	 */
 	// Pet Talent get methods
 
 	public double getDealer() {
@@ -281,7 +265,7 @@ public class PetCalculations {
 	public double getDefender() {
 		return defender;
 	}
-	
+
 	public double getBlocker() {
 		return blocker;
 	}
@@ -293,11 +277,11 @@ public class PetCalculations {
 	public double getHealer() {
 		return healer;
 	}
-	
+
 	public double getLively() {
 		return lively;
 	}
-	
+
 	public double getHealthy() {
 		return healthy;
 	}
@@ -317,40 +301,26 @@ public class PetCalculations {
 	public double getStunResistant() {
 		return stunResistant;
 	}
-	
+
 	public double getFishingLuck() {
 		return fishingLuck;
 	}
 
-/*	public double getAddHealth() {
-		return addHealth;
-	}
-
-	public double getHealthBoost() {
-		return healthBoost;
-	}
-
-	public double getHealthGift() {
-		return healthGift;
-	}
-
-	public double getHealthBounty() {
-		return healthBounty;
-	}
-
-	public double getExtraMana() {
-		return extraMana;
-	}
-
-	public double getManaBoost() {
-		return manaBoost;
-	}
-
-	public double getManaBounty() {
-		return manaBounty;
-	}
-
-	public double getManaGift() {
-		return manaGift;
-	}*/
+	/*
+	 * public double getAddHealth() { return addHealth; }
+	 * 
+	 * public double getHealthBoost() { return healthBoost; }
+	 * 
+	 * public double getHealthGift() { return healthGift; }
+	 * 
+	 * public double getHealthBounty() { return healthBounty; }
+	 * 
+	 * public double getExtraMana() { return extraMana; }
+	 * 
+	 * public double getManaBoost() { return manaBoost; }
+	 * 
+	 * public double getManaBounty() { return manaBounty; }
+	 * 
+	 * public double getManaGift() { return manaGift; }
+	 */
 }
