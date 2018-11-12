@@ -9,8 +9,9 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import pro.lurk.command.Calculator;
-import pro.lurk.util.ConfigLoader;
+import pro.lurk.command.EmbedManager;
 import pro.lurk.command.HelpCommand;
+import pro.lurk.util.ConfigLoader;
 
 public class Bot {
 	private static JDA api;
@@ -22,6 +23,8 @@ public class Bot {
 	public static void main(String[] arguments) throws Exception {
 
 		setupBot();
+		// Tell current login user
+		System.out.println(api.getSelfUser().getName().toString());
 	}
 
 	// Setups the bot by retriving config data, logging in, setting the game, and adding listener(s) for functionality.
@@ -36,6 +39,7 @@ public class Bot {
 			HelpCommand help = new HelpCommand();
 			jdaBuilder.addEventListener(help.registerCommand(help));
 			jdaBuilder.addEventListener(help.registerCommand(new Calculator()));
+			jdaBuilder.addEventListener(help.registerCommand(new EmbedManager()));
 			// Finally build
 			api = jdaBuilder.build();
 			api.awaitReady();
