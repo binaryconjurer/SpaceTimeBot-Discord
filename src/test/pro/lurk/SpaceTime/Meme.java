@@ -1,5 +1,7 @@
 package pro.lurk.SpaceTime;
 
+import pro.lurk.command.PetCalculations;
+
 public class Meme {
 
 	public static void main(String args[]) {
