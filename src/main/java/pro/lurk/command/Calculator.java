@@ -30,7 +30,7 @@ public class Calculator extends Command {
 	public void onCommand(MessageReceivedEvent e, String[] args) {
 		MessageChannel channel = e.getChannel();
 		Member member = e.getMember();
-		if (channel.getId().equals("503450510418903040")) {
+		if (channel.getId().equals("443135403571281920")) {
 			if (args.length == 6) {
 				Optional<List<Integer>> stats = formatStats(args);
 				if (stats.isPresent()) {
