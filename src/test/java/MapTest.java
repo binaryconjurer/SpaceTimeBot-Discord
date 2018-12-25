@@ -23,11 +23,12 @@ public class MapTest {
 		EmbedHelper helper = new EmbedHelper();
 		helper.setTitle("Thetechman");
 		helper.setTitleURL("https://twitch.tv/thetechboy");
-		helper.setTitle("Tech Demo");
+		helper.setTitle("Mander Demo");
 		helper.setDescription("An amazing description!");
-		helper.setColor("0x6edac0");
+		helper.setColor(0x6edac0);
 		helper.setFields(map);
-		helper.setMessageID(511401944582193153L);
+		helper.setFooter("mander");
+		helper.setMessageID(511457445244174338L);
 		db.save(helper);
 
 	}
