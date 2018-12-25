@@ -12,11 +12,15 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import pro.lurk.SpaceTime.Bot;
+import pro.lurk.util.CommandParser;
 import pro.lurk.util.Database;
 
 public class EmbedManager extends Command {
 
-	public Database db = new Database();
+	public String[] commandArgs = { "a", "aURL", "aIconURL", "t", "tURL", "d", "c", "thumbnail", "f", "fd", "footer",
+			"footerURL", "m" };
+	private Database db = new Database();
+	public CommandParser commandParser = new CommandParser(commandArgs);
 
 	@Override
 	public void onCommand(MessageReceivedEvent event, String[] args) {
@@ -26,6 +30,7 @@ public class EmbedManager extends Command {
 		Message message = event.getMessage(); // The message that was received.
 		MessageChannel channel = event.getChannel(); // This is the MessageChannel that the message was sent to.
 		// Guild guild = event.getGuild();
+
 		// Nothing
 		if (args.length == 1) {
 			channel.sendMessage("Baka try again!").queue();
@@ -39,45 +44,92 @@ public class EmbedManager extends Command {
 		}
 		// ADD
 		// .embed add -t [title]
-		else if (args[1].equalsIgnoreCase("add") && args[1].equals("add") && args.length == 3) {
+		else if (args[1].equalsIgnoreCase("add") && args[2].equalsIgnoreCase("-t") && args.length >= 4) {
 			EmbedHelper helper = new EmbedHelper();
-			helper.setTitle(getDescription(args, message));
-			channel.sendMessage(defaultEmbed(helper).build()).queue();
+			helper.setTitle(getTitle(args, message));
+			channel.sendMessage(customEmbed(helper).build()).queue();
 			helper.setMessageID(getLastMessageIDByUser(channel, Bot.getAPI().getSelfUser()));
 			db.save(helper);
 
 		}
-		// .embed add -t [title] -d [description]
-		else if (args[1].equalsIgnoreCase("add") && args.length >= 4) {
+		// .embed edit
+		else if (args[1].equalsIgnoreCase("edit") && args.length > 2) {
+
+			// .emebed edit -t thing stuff
+			// {.embed, edit, -t, thing, stuff}
 			EmbedHelper helper = new EmbedHelper();
-			helper.setTitle(getDescription(args, message));
-			helper.setDescription(getDescription(args, message));
-			channel.sendMessage(defaultEmbed(helper).build()).queue();
-			helper.setMessageID(getLastMessageIDByUser(channel, Bot.getAPI().getSelfUser()));
-			db.save(helper);
-		}
-		// .embed edit [title]
-		else if (args[1].equalsIgnoreCase("add") && args.length == 2) {
+			int messageLengthToOperation = args[0].length() + 1 + args[1].length() + 1;
+			int messageLengthToJustOperation = messageLengthToOperation + args[2].length();
+			String operation = message.getContentDisplay().substring(messageLengthToOperation,
+					messageLengthToJustOperation);
+			System.out.println("The operation is: " + operation);
+			String content = message.getContentDisplay().substring(messageLengthToJustOperation + 1);
 
-		}
+			switch (operation) {
 
+			// Author Name
+			case "-a":
+				helper.setAuthorName(content);
+				channel.editMessageById(helper.getMessageID(), customEmbed(helper).build()).queue();
+				System.out.println("Your title is: " + content);
+				break;
+			// Author URL
+			case "-aURL":
+				System.out.println("Your title is: " + content);
+				break;
+			// Author URL Icon
+			case "-aURLIcon":
+				System.out.println("Your title is: " + content);
+				break;
+			// Title
+			case "-t":
+				System.out.println("Your title is: " + content);
+				break;
+			// Title URL
+			case "-tURL":
+				System.out.println("Your title is: " + content);
+				break;
+			// Description
+			case "-d":
+				System.out.println("Your description is: " + content);
+				break;
+			// Color
+			case "-c":
+				System.out.println("Your description is: " + content);
+				break;
+			// Image
+			case "-image":
+				System.out.println("Your description is: " + content);
+				break;
+			// Thumbnail
+			case "-thumbnail":
+				System.out.println("Your description is: " + content);
+				break;
+			// Field
+			case "-f":
+				System.out.println("Your description is: " + content);
+				break;
+			// Footer
+			case "-footer":
+				System.out.println("Your description is: " + content);
+				break;
+			// Footer URL
+			case "-footerURL":
+				System.out.println("Your description is: " + content);
+				break;
+
+			}
+		}
 	}
 
-	private EmbedBuilder defaultEmbed(EmbedHelper helper) {
-		EmbedBuilder embed = new EmbedBuilder();
-		embed.setAuthor(helper.getAuthorName());
-		embed.setTitle(helper.getTitle());
-		embed.setDescription(helper.getDescription());
-		embed.setColor(new Color(helper.getColor()));
-		embed.addField("Field Title", "This is text!", false);
-		return embed;
+	private void embedUpdate(EmbedHelper helper, MessageChannel channel) {
+		channel.editMessageById(helper.getMessageID(), customEmbed(helper).build()).queue();
+		// channel.sendMessage(customEmbed(helper).build()).queue();
 	}
 
 	private EmbedBuilder customEmbed(EmbedHelper helper) {
 		EmbedBuilder customEmbed = new EmbedBuilder();
 		// Just AuthorName
-
-		
 
 		customEmbed.setColor(new Color(helper.getColor()));
 
@@ -111,7 +163,7 @@ public class EmbedManager extends Command {
 		if (!helper.getDescription().isEmpty()) {
 			customEmbed.setDescription(helper.getDescription());
 		}
-		
+
 		// Image
 		if (!helper.getImage().isEmpty()) {
 			customEmbed.setImage(helper.getImage());
@@ -134,28 +186,22 @@ public class EmbedManager extends Command {
 		fields = helper.getFields();
 
 		// Fields
-		for(Entry<String, String> e : fields.entrySet()) {
-	        String key = e.getKey();
-	        String value = e.getValue();
-	        
-	        customEmbed.addField(key, value, false);
-	        
-	    }
+		for (Entry<String, String> e : fields.entrySet()) {
+			String key = e.getKey();
+			String value = e.getValue();
+
+			customEmbed.addField(key, value, false);
+
+		}
 		return customEmbed;
 	}
 
-	private String getTitle(String args[], Message message) {
+	private String getTitle(String[] args, Message message) {
 
-		int messageLocation = args[0].length() + 1 + args[1].length() + 1;
-		String fullDescription = message.getContentDisplay().substring(messageLocation);
-		return fullDescription;
-	}
-
-	private String getDescription(String args[], Message message) {
-
+		// .embed add -t title
 		int messageLocation = args[0].length() + 1 + args[1].length() + 1 + args[2].length() + 1;
-		String fullDescription = message.getContentDisplay().substring(messageLocation);
-		return fullDescription;
+		String fullTitle = message.getContentDisplay().substring(messageLocation);
+		return fullTitle;
 	}
 
 	private long getLastMessageIDByUser(MessageChannel channel, User user) {
