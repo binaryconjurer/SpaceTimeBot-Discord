@@ -8,9 +8,9 @@ public class CommandParsingTest {
 	public static String[] commandArgs = { "-t", "-d", "-c", "-f", "-fd" };
 
 	public static void main(String[] args) {
-		// LinkedHashMap<String, ArrayList<String>> theCommandArgs = parse(command1);
+		LinkedHashMap<String, ArrayList<String>> theCommandArgs = parse(command1);
 		LinkedHashMap<String, ArrayList<String>> theCommandArgs1 = parse(command2);
-		// System.out.println(theCommandArgs);
+		System.out.println(theCommandArgs);
 		System.out.println(theCommandArgs1);
 		System.out.println(theCommandArgs1.get("-f").get(0));
 
@@ -72,8 +72,7 @@ public class CommandParsingTest {
 		if (argument.equals("-f")) {
 			locations.add(location);
 			return locations;
-		}
-		else if (!argument.equals("-f")) {
+		} else if (!argument.equals("-f")) {
 			while (location != -1) {
 				locations.add(location);
 				location = command.indexOf(argument, location + 1);

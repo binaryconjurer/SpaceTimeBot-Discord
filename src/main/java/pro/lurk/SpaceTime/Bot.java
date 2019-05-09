@@ -9,8 +9,9 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import pro.lurk.command.Calculator;
-import pro.lurk.command.EmbedManager;
+import pro.lurk.command.CustomEmbedManager;
 import pro.lurk.command.HelpCommand;
+import pro.lurk.command.Meow;
 import pro.lurk.util.ConfigLoader;
 
 public class Bot {
@@ -24,7 +25,9 @@ public class Bot {
 
 		setupBot();
 		// Tell current login user
-		System.out.println(api.getSelfUser().getName().toString());
+		System.out.println("You are logged in as: " + api.getSelfUser().getName().toString());
+		
+		
 	}
 
 	// Setups the bot by retriving config data, logging in, setting the game, and adding listener(s) for functionality.
@@ -39,7 +42,8 @@ public class Bot {
 			HelpCommand help = new HelpCommand();
 			jdaBuilder.addEventListener(help.registerCommand(help));
 			jdaBuilder.addEventListener(help.registerCommand(new Calculator()));
-			jdaBuilder.addEventListener(help.registerCommand(new EmbedManager()));
+			jdaBuilder.addEventListener(help.registerCommand(new CustomEmbedManager()));
+			jdaBuilder.addEventListener(help.registerCommand(new Meow()));
 			// Finally build
 			api = jdaBuilder.build();
 			api.awaitReady();
