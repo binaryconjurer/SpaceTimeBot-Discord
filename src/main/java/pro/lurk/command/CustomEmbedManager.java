@@ -21,16 +21,11 @@ public class CustomEmbedManager extends Command {
 
 	private String commandName = ".embed";
 
-	// Event specific information
-	// private static Guild guild;
-	// private static MessageChannel channel;
-	// private static User author;
-	// private static Message message;
-
 	// Array of all possible commandArgs for standard embed actions
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
 			"ft", "fd", "fi", "footer", "footerIconURL", "m", "o", "insert", "swap" };
-	// private String[] fieldCommandArgs = { "#", "t", "m", "ft", "fd", "fi" };
+	
+	LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
 
 	private Database db = new Database();
 	private CommandParser commandParser = new CommandParser(commandArgs);
@@ -44,7 +39,7 @@ public class CustomEmbedManager extends Command {
 	Message message = null;
 
 	// Error Messages
-	private String INVALID_ERROR_MESSAGE = "Your command is invalid, please try again!";
+	private String INVALID_ERROR_MESSAGE = ".embed requires you to use an operation like add, edit, delete, forceupdate, or field!";
 	private String ADD_ERROR_MESSAGE = "To add an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String EDIT_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String DELETE_ERROR_MESSAGE = "To delete an embed you must speficy a title or Message ID. Use .help .embed for more info!";
@@ -59,6 +54,7 @@ public class CustomEmbedManager extends Command {
 	// TODO: Once checks are done attempt to get an an CustomEmbed object ahead of
 	// time to prevent clutter later on
 	// TODO: Refactor and make all the things easier to read!
+
 	public void onCommand(MessageReceivedEvent event, String[] args) {
 		// Sees if user has entered enough arguments
 		// If not it returns an error message defined within that method
@@ -68,7 +64,9 @@ public class CustomEmbedManager extends Command {
 		author = event.getAuthor();
 		message = event.getMessage();
 
-		if (isEnoughArguments()) {
+		if (isEnoughArguments() && isValidOperation()) {
+
+			this.commandArgumentsFromUser = parseUserInput();
 
 			String commandOperator = args[1].toLowerCase();
 			switch (commandOperator) {
@@ -81,30 +79,13 @@ public class CustomEmbedManager extends Command {
 			case "delete":
 				deleteEmbed();
 				break;
-			case "field":
-				modifyFields();
-				break;
 			case "forceupdate":
 				forceUpdate();
 				break;
+			case "field":
+				modifyFields();
+				break;
 			}
-		}
-	}
-
-	// Checks to see if the user has submitted enough arguments
-	private boolean isEnoughArguments() {
-		// Triggers when the user has less then the required arguments
-		// Ex:
-		// .embed
-		// .embed add
-		if (args.length < 2) {
-			channel.sendMessage(author.getAsMention() + ", " + INVALID_ERROR_MESSAGE).queue();
-			return false;
-		}
-		// When the user has entered enough arguments 3 or more items.
-		// Ex: .embed add -t Cool Links
-		else {
-			return true;
 		}
 	}
 
@@ -118,13 +99,6 @@ public class CustomEmbedManager extends Command {
 		}
 		// This is the main logic behind adding a command and it's checks.
 		if (args.length > 2) {
-			// Parses user input and sorts through args into a usable object
-			String userMessage = message.getContentDisplay();
-			// The LinkedHashMap holds each key as any of the possible args, each key points
-			// to an ArrayList holding any Strings that are to that arg
-			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
-			commandArgumentsFromUser = commandParser.parse(userMessage);
-			// If user doesn't detail what he wants for any arugment.
 			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
 				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
 				return;
@@ -152,9 +126,6 @@ public class CustomEmbedManager extends Command {
 		// This is the main logic behind adding a command and it's checks.
 		if (args.length > 2) {
 			String userMessage = message.getContentDisplay();
-			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
-			// Parses user input
-			commandArgumentsFromUser = commandParser.parse(userMessage);
 			// Converts message to lower case so .startsWith methods are case insensitive
 			userMessage = userMessage.toLowerCase();
 			// If user doesn't detail what he wants for any arugment.
@@ -181,6 +152,52 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
+	private void deleteEmbed() {
+		// If the user has passed no additional arguments provide error message
+		// Ex: .embed delete
+		if (args.length == 2) {
+			channel.sendMessage(author.getAsMention() + ", " + DELETE_ERROR_MESSAGE).queue();
+			return;
+		}
+		if (args.length > 2) {
+			String userMessage = message.getContentDisplay();
+			userMessage = userMessage.toLowerCase();
+			// If user doesn't detail what he wants for any arugment.
+			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
+				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
+				return;
+			}
+			// Delete by Title
+			if (userMessage.startsWith(".embed delete -t")) {
+				String embedTitle = commandArgumentsFromUser.get("t").get(0);
+				CustomEmbed helper = db.getbyTitle(embedTitle);
+				channel.deleteMessageById(helper.getMessageID()).queue();
+				db.deleteByTitle(embedTitle);
+				return;
+			}
+			// Delete by MessageID
+			if (userMessage.startsWith(".embed delete -m")) {
+				long embedMessageID = Long.parseLong(commandArgumentsFromUser.get("m").get(0));
+				channel.deleteMessageById(embedMessageID).queue();
+				db.deleteByMessageID(embedMessageID);
+				return;
+			}
+		}
+	}
+
+	private void forceUpdate() {
+		// If the user has passed no additional arguments provide error message
+		// Ex: .embed delete
+		if (args.length == 2) {
+			channel.sendMessage(author.getAsMention() + ", " + FORCE_UPDATE_ERROR_MESSAGE).queue();
+			return;
+		}
+		if (args.length > 2) {
+			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			embedUpdate(helper, channel);
+		}
+	}
+
 	private void modifyFields() {
 		// If the user has passed no additional arguments provide error message
 		// Ex: .embed field
@@ -190,11 +207,8 @@ public class CustomEmbedManager extends Command {
 		}
 		// This is the main logic behind adding a command and it's checks.
 		if (args.length > 2) {
-			String userMessage = message.getContentDisplay();
-			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
-			// Parses user input
-			commandArgumentsFromUser = commandParser.parse(userMessage);
 			// Converts message to lower case so .startsWith methods are case insensitive
+			String userMessage = message.getContentDisplay();
 			userMessage = userMessage.toLowerCase();
 
 			// Operation arg is always 4th (5th) value.
@@ -374,60 +388,6 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	private void deleteEmbed() {
-		// If the user has passed no additional arguments provide error message
-		// Ex: .embed delete
-		if (args.length == 2) {
-			channel.sendMessage(author.getAsMention() + ", " + DELETE_ERROR_MESSAGE).queue();
-			return;
-		}
-		if (args.length > 2) {
-			String userMessage = message.getContentDisplay();
-			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
-			// Parses user input
-			commandArgumentsFromUser = commandParser.parse(userMessage);
-			// Converts message to lower case so .startsWith methods are case insensitive
-			userMessage = userMessage.toLowerCase();
-			// If user doesn't detail what he wants for any arugment.
-			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
-				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
-				return;
-			}
-			// Delete by Title
-			if (userMessage.startsWith(".embed delete -t")) {
-				String embedTitle = commandArgumentsFromUser.get("t").get(0);
-				CustomEmbed helper = db.getbyTitle(embedTitle);
-				channel.deleteMessageById(helper.getMessageID()).queue();
-				db.deleteByTitle(embedTitle);
-				return;
-			}
-			// Delete by MessageID
-			if (userMessage.startsWith(".embed delete -m")) {
-				long embedMessageID = Long.parseLong(commandArgumentsFromUser.get("m").get(0));
-				channel.deleteMessageById(embedMessageID).queue();
-				db.deleteByMessageID(embedMessageID);
-				return;
-			}
-		}
-	}
-
-	private void forceUpdate() {
-		// If the user has passed no additional arguments provide error message
-		// Ex: .embed delete
-		if (args.length == 2) {
-			channel.sendMessage(author.getAsMention() + ", " + FORCE_UPDATE_ERROR_MESSAGE).queue();
-			return;
-		}
-		if (args.length > 2) {
-			String userMessage = message.getContentDisplay();
-			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
-			// Parses user input
-			commandArgumentsFromUser = commandParser.parse(userMessage);
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
-			embedUpdate(helper, channel);
-		}
-	}
-
 	private CustomEmbed editCustomEmbed(CustomEmbed helper, LinkedHashMap<String, ArrayList<String>> input,
 			String editType) {
 		// Editing by Title and there is a new Title
@@ -563,6 +523,47 @@ public class CustomEmbedManager extends Command {
 			}
 		}
 		return -1;
+	}
+	
+	// Parses user input into a LinkedHashMap with key being the tag leading to a ArrayList<String> of it's matching info
+	private LinkedHashMap<String, ArrayList<String>> parseUserInput() {
+		String userMessage = message.getContentDisplay();
+		LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
+		// Parses user input
+		commandArgumentsFromUser = commandParser.parse(userMessage);
+		return commandArgumentsFromUser;
+	}
+
+	// Checks to see if the user has submitted enough arguments
+	private boolean isEnoughArguments() {
+		// Triggers when the user has less then the required arguments
+		// Ex:
+		// .embed
+		// .embed add
+		if (args.length < 2) {
+			channel.sendMessage(author.getAsMention() + ", " + INVALID_ERROR_MESSAGE).queue();
+			return false;
+		}
+		// When the user has entered enough arguments 3 or more items.
+		// Ex: .embed add -t Cool Links
+		else {
+			return true;
+		}
+	}
+
+	private boolean isValidOperation() {
+		// Triggers when the user has less then the required arguments
+		// Ex:
+		// .embed
+		// .embed add
+		// When the user has entered enough arguments 3 or more items.
+		// Ex: .embed add -t Cool Links
+		if (args[1].equals("add") || args[1].equals("edit") || args[1].equals("delete") || args[1].equals("forceupdate")
+				|| args[1].equals("field")) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
