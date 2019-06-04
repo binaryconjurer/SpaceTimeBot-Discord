@@ -3,6 +3,7 @@ package pro.lurk.command;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class CustomEmbedManager extends Command {
 
 	// Array of all possible commandArgs for standard embed actions
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
-			"ft", "fd", "fi", "footer", "footerIconURL", "m", "o" };
+			"ft", "fd", "fi", "footer", "footerIconURL", "m", "o", "insert", "swap" };
 	// private String[] fieldCommandArgs = { "#", "t", "m", "ft", "fd", "fi" };
 
 	private Database db = new Database();
@@ -53,9 +54,10 @@ public class CustomEmbedManager extends Command {
 	private String FIELD_OVER25 = "You are trying to add an embed over the cap of 25. Please consider removing or modifying the existing stack.";
 
 	@Override
-	//TODO: Do all command checks before entering into operation specific actions
-	//TODO: Once checks are done attempt to get an an CustomEmbed object ahead of time to prevent clutter later on
-	//TODO: Refactor and make all the things easier to read!
+	// TODO: Do all command checks before entering into operation specific actions
+	// TODO: Once checks are done attempt to get an an CustomEmbed object ahead of
+	// time to prevent clutter later on
+	// TODO: Refactor and make all the things easier to read!
 	public void onCommand(MessageReceivedEvent event, String[] args) {
 		// Sees if user has entered enough arguments
 		// If not it returns an error message defined within that method
@@ -199,17 +201,30 @@ public class CustomEmbedManager extends Command {
 			// Operation arg is always 4th (5th) value.
 			String commandOperator = args[4].toLowerCase();
 			switch (commandOperator) {
+			// Command Syntax:
+			// .embed field -t meow -add -ft meow -fd meow2
 			case "-add":
 				addField(commandArgumentsFromUser);
 				break;
+			// Command Syntax:
+			// .embed field -t meow -edit -ft meow -ft meow2 -fd meow3
 			case "-edit":
 				editField(commandArgumentsFromUser);
 				break;
+			// Command Syntax:
+			// .embed field -t meow -insert NUMBER -ft meow
 			case "-insert":
-				System.out.println();
+				insertField(commandArgumentsFromUser);
 				break;
+			// Command Syntax:
+			// .embed field -t meow -swap 0 3
+			case "-swap":
+				swapField(commandArgumentsFromUser);
+				break;
+			// Command Syntax:
+			// .embed field -t meow -delete -ft meow
 			case "-delete":
-				System.out.println();
+				deleteField(commandArgumentsFromUser);
 				break;
 			}
 		}
@@ -218,7 +233,13 @@ public class CustomEmbedManager extends Command {
 	private void addField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
-		boolean inline = false;
+		// Sometimes inline isn't set so by default it's false, if it is specified used
+		// that value instead.
+		boolean isInline = false;
+		if (!commandArgumentsFromUser.get("fi").isEmpty()) {
+			isInline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
+		}
+
 		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
 			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
@@ -226,7 +247,7 @@ public class CustomEmbedManager extends Command {
 			fields = helper.getFields();
 			int fieldSize = fields.size();
 			if (fieldSize < 25) {
-				CustomEmbedField newField = new CustomEmbedField(fieldTitle, fieldDescription, inline);
+				CustomEmbedField newField = new CustomEmbedField(fieldTitle, fieldDescription, isInline);
 				fields.add(newField);
 				helper.setFields(fields);
 				embedUpdate(helper, channel);
@@ -244,9 +265,96 @@ public class CustomEmbedManager extends Command {
 	private void editField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
+		// Sometimes inline isn't set so by default it's false, if it is specified used
+		// that value instead.
+		boolean isInline = false;
+		if (!commandArgumentsFromUser.get("fi").isEmpty()) {
+			isInline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
+		}
+
+		if (args[2].equalsIgnoreCase("-t")) {
+			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
+			fields = helper.getFields();
+			int fieldSize = fields.size();
+			// Search for the existing field title in order to edit.
+			for (int i = 0; i < fieldSize; i++) {
+				if (fields.get(i).getFieldTitle().equals(fieldTitle)) {
+					// If user enters in two field titles, one to search by, the other is the one to
+					// switch out.
+					// Also sets the field description from the user.
+					if (!commandArgumentsFromUser.get("ft").get(1).isEmpty()) {
+						fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
+						fields.get(i).setFieldDescription(fieldDescription);
+						fields.get(i).setInline(isInline);
+						break;
+					}
+					fields.get(i).setFieldTitle(fieldTitle);
+					fields.get(i).setFieldDescription(fieldDescription);
+					fields.get(i).setInline(isInline);
+				}
+
+			}
+
+			helper.setFields(fields);
+			embedUpdate(helper, channel);
+			db.save(helper);
+			return;
+		}
+	}
+
+	private void insertField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
+		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
+		int insertNumber = Integer.parseInt(commandArgumentsFromUser.get("insert").get(0));
 		boolean inline = false;
-//		inline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
-		
+		// Edit by type is always the 2nd (3rd) value.
+		if (args[2].equalsIgnoreCase("-t")) {
+			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
+			fields = helper.getFields();
+			int fieldSize = fields.size();
+			if (fieldSize < 25) {
+				CustomEmbedField newField = new CustomEmbedField(fieldTitle, fieldDescription, inline);
+				fields.add(insertNumber, newField);
+				helper.setFields(fields);
+				embedUpdate(helper, channel);
+				db.save(helper);
+				return;
+			}
+			if (fieldSize == 25) {
+				channel.sendMessage(author.getAsMention() + ", " + FIELD_OVER25).queue();
+				return;
+			}
+
+		}
+	}
+
+	private void swapField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+		// int swapNumber = Integer.parseInt();
+		ArrayList<String> swapValues = commandArgumentsFromUser.get("swap");
+		String swapNums = swapValues.get(0);
+		String[] swapArray = swapNums.split(" ");
+
+		int swap1 = Integer.parseInt(swapArray[0]);
+		int swap2 = Integer.parseInt(swapArray[1]);
+		boolean inline = false;
+		// Edit by type is always the 2nd (3rd) value.
+		if (args[2].equalsIgnoreCase("-t")) {
+			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
+			fields = helper.getFields();
+			Collections.swap(fields, swap1, swap2);
+			helper.setFields(fields);
+			embedUpdate(helper, channel);
+			db.save(helper);
+			return;
+		}
+	}
+
+	private void deleteField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
+		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
 			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
@@ -254,19 +362,16 @@ public class CustomEmbedManager extends Command {
 			int fieldSize = fields.size();
 			for (int i = 0; i < fieldSize; i++) {
 				if (fields.get(i).getFieldTitle().equals(fieldTitle)) {
-					if (!commandArgumentsFromUser.get("ft").get(1).isEmpty()) {
-						fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
-					}
-					fields.get(i).setFieldTitle(fieldTitle);
-					fields.get(i).setFieldDescription(fieldDescription);
+					fields.remove(i);
+					break;
 				}
-				
+
 			}
-			
 			helper.setFields(fields);
 			embedUpdate(helper, channel);
 			db.save(helper);
 			return;
+
 		}
 	}
 
