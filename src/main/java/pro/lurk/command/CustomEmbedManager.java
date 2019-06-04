@@ -49,6 +49,7 @@ public class CustomEmbedManager extends Command {
 	private String EDIT_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String DELETE_ERROR_MESSAGE = "To delete an embed you must speficy a title or Message ID. Use .help .embed for more info!";
 	private String MISSING_CONTENTS_ERROR_MESSAGE = "Please specify the contents in your arugments!";
+	private String FORCE_UPDATE_ERROR_MESSAGE = "Please specify which embed you wish to update!";
 	// Field Error Messages
 	private String FIELD_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID alongside field args (TBD). You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String FIELD_OVER25 = "You are trying to add an embed over the cap of 25. Please consider removing or modifying the existing stack.";
@@ -83,8 +84,6 @@ public class CustomEmbedManager extends Command {
 			case "field":
 				modifyFields();
 				break;
-			// TODO: Create a force update method for situations where we need to just pull
-			// whatever the db has
 			case "forceupdate":
 				forceUpdate();
 				break;
@@ -413,7 +412,20 @@ public class CustomEmbedManager extends Command {
 	}
 
 	private void forceUpdate() {
-		// embedUpdate(helper, channel);
+		// If the user has passed no additional arguments provide error message
+		// Ex: .embed delete
+		if (args.length == 2) {
+			channel.sendMessage(author.getAsMention() + ", " + FORCE_UPDATE_ERROR_MESSAGE).queue();
+			return;
+		}
+		if (args.length > 2) {
+			String userMessage = message.getContentDisplay();
+			LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
+			// Parses user input
+			commandArgumentsFromUser = commandParser.parse(userMessage);
+			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			embedUpdate(helper, channel);
+		}
 	}
 
 	private CustomEmbed editCustomEmbed(CustomEmbed helper, LinkedHashMap<String, ArrayList<String>> input,
