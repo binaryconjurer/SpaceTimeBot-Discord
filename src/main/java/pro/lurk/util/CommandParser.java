@@ -85,7 +85,11 @@ public class CommandParser {
 	// design.
 	private ArrayList<String> getCommandArgumentContents(String[] command, String argType) {
 		ArrayList<String> listOfContents = new ArrayList<String>();
-		String contents = null;
+		String contents = "";
+		
+		if (command == null) {
+			return listOfContents;
+		}
 
 		for (String section : command) {
 			if (section.startsWith(argType + " ")) {
