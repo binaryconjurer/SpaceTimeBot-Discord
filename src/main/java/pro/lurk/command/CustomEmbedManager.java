@@ -24,7 +24,7 @@ public class CustomEmbedManager extends Command {
 	// Array of all possible commandArgs for standard embed actions
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
 			"ft", "fd", "fi", "footer", "footerIconURL", "m", "o", "insert", "swap" };
-	
+
 	LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
 
 	private Database db = new Database();
@@ -39,22 +39,17 @@ public class CustomEmbedManager extends Command {
 	Message message = null;
 
 	// Error Messages
-	private String INVALID_ERROR_MESSAGE = ".embed requires you to use an operation like add, edit, delete, forceupdate, or field!";
+	private String INVALID_ERROR_MESSAGE = ".embed requires you to use an operation like add, edit, delete, forceupdate, or field followed by at least one argument!";
 	private String ADD_ERROR_MESSAGE = "To add an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String EDIT_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String DELETE_ERROR_MESSAGE = "To delete an embed you must speficy a title or Message ID. Use .help .embed for more info!";
-	private String MISSING_CONTENTS_ERROR_MESSAGE = "Please specify the contents in your arugments!";
-	private String FORCE_UPDATE_ERROR_MESSAGE = "Please specify which embed you wish to update!";
+	private String MISSING_CONTENTS_ERROR_MESSAGE = "Please specify the contents in your arugment(s)!";
+	private String FORCE_UPDATE_ERROR_MESSAGE = "Please specify which embed you wish to force update!";
 	// Field Error Messages
-	private String FIELD_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID alongside field args (TBD). You may include other options with additoinal arguments. Use .help .embed for more info!";
+	private String FIELD_ERROR_MESSAGE = "To edit an embed you must speficy a title alongside field args -ft, -fd, or -fi . You may include other options with additoinal arguments. Use .help .embed for more info!";
 	private String FIELD_OVER25 = "You are trying to add an embed over the cap of 25. Please consider removing or modifying the existing stack.";
 
 	@Override
-	// TODO: Do all command checks before entering into operation specific actions
-	// TODO: Once checks are done attempt to get an an CustomEmbed object ahead of
-	// time to prevent clutter later on
-	// TODO: Refactor and make all the things easier to read!
-
 	public void onCommand(MessageReceivedEvent event, String[] args) {
 		// Sees if user has entered enough arguments
 		// If not it returns an error message defined within that method
@@ -65,23 +60,29 @@ public class CustomEmbedManager extends Command {
 		message = event.getMessage();
 
 		if (isEnoughArguments() && isValidOperation()) {
-
+			// Parses user input
 			this.commandArgumentsFromUser = parseUserInput();
-
+			// Checks to see which command operation the user wishes to perform.
+			// Ex: .embed add
 			String commandOperator = args[1].toLowerCase();
 			switch (commandOperator) {
+			// .embed add
 			case "add":
 				addEmbed();
 				break;
+			// .embed edit
 			case "edit":
 				editEmbed();
 				break;
+			// .embed delete
 			case "delete":
 				deleteEmbed();
 				break;
+			// .embed forceupdate
 			case "forceupdate":
 				forceUpdate();
 				break;
+			// .embed field
 			case "field":
 				modifyFields();
 				break;
@@ -89,7 +90,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	// Use this to add an embed to the system
+	// Use this to add an embed to the system.
 	private void addEmbed() {
 		// If the user has passed no additional arguments provide error message
 		// Ex: .embed add
@@ -116,6 +117,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
+	// Use this to edit any non field property of an embed.
 	private void editEmbed() {
 		// If the user has passed no additional arguments provide error message
 		// Ex: .embed edit
@@ -152,6 +154,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
+	// Use this to delete an embed from Discord and the db.
 	private void deleteEmbed() {
 		// If the user has passed no additional arguments provide error message
 		// Ex: .embed delete
@@ -185,6 +188,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
+	// Use this to force update a change to an embed from the db to Discord.
 	private void forceUpdate() {
 		// If the user has passed no additional arguments provide error message
 		// Ex: .embed delete
@@ -217,33 +221,33 @@ public class CustomEmbedManager extends Command {
 			// Command Syntax:
 			// .embed field -t meow -add -ft meow -fd meow2
 			case "-add":
-				addField(commandArgumentsFromUser);
+				addField();
 				break;
 			// Command Syntax:
 			// .embed field -t meow -edit -ft meow -ft meow2 -fd meow3
 			case "-edit":
-				editField(commandArgumentsFromUser);
+				editField();
 				break;
 			// Command Syntax:
 			// .embed field -t meow -insert NUMBER -ft meow
 			case "-insert":
-				insertField(commandArgumentsFromUser);
+				insertField();
 				break;
 			// Command Syntax:
 			// .embed field -t meow -swap 0 3
 			case "-swap":
-				swapField(commandArgumentsFromUser);
+				swapField();
 				break;
 			// Command Syntax:
 			// .embed field -t meow -delete -ft meow
 			case "-delete":
-				deleteField(commandArgumentsFromUser);
+				deleteField();
 				break;
 			}
 		}
 	}
 
-	private void addField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+	private void addField() {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
 		// Sometimes inline isn't set so by default it's false, if it is specified used
@@ -253,7 +257,7 @@ public class CustomEmbedManager extends Command {
 			isInline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
 		}
 
-		// Edit by type is always the 2nd (3rd) value.
+		// Add by title
 		if (args[2].equalsIgnoreCase("-t")) {
 			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
@@ -275,7 +279,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	private void editField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+	private void editField() {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
 		// Sometimes inline isn't set so by default it's false, if it is specified used
@@ -316,7 +320,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	private void insertField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+	private void insertField() {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
 		int insertNumber = Integer.parseInt(commandArgumentsFromUser.get("insert").get(0));
@@ -343,7 +347,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	private void swapField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+	private void swapField() {
 		// int swapNumber = Integer.parseInt();
 		ArrayList<String> swapValues = commandArgumentsFromUser.get("swap");
 		String swapNums = swapValues.get(0);
@@ -365,7 +369,7 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
-	private void deleteField(LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser) {
+	private void deleteField() {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
@@ -378,7 +382,6 @@ public class CustomEmbedManager extends Command {
 					fields.remove(i);
 					break;
 				}
-
 			}
 			helper.setFields(fields);
 			embedUpdate(helper, channel);
@@ -524,14 +527,16 @@ public class CustomEmbedManager extends Command {
 		}
 		return -1;
 	}
-	
-	// Parses user input into a LinkedHashMap with key being the tag leading to a ArrayList<String> of it's matching info
+
+	// Parses user input into a LinkedHashMap with key being the tag leading to a
+	// ArrayList<String> of it's matching info
 	private LinkedHashMap<String, ArrayList<String>> parseUserInput() {
 		String userMessage = message.getContentDisplay();
 		LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
 		// Parses user input
 		commandArgumentsFromUser = commandParser.parse(userMessage);
 		return commandArgumentsFromUser;
+
 	}
 
 	// Checks to see if the user has submitted enough arguments
