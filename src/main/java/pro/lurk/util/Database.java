@@ -72,7 +72,7 @@ public class Database {
 	}
 
 	public CustomEmbed getbyTitle(String title) {
-		CustomEmbed helper = new CustomEmbed();
+		CustomEmbed discordEmbed = new CustomEmbed();
 
 		String select = "SELECT * FROM customEmbeds WHERE title = ?";
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(select)) {
@@ -80,31 +80,31 @@ public class Database {
 			ResultSet rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				helper.setAuthorName(rs.getString("authorName"));
-				helper.setAuthorURL(rs.getString("authorURL"));
-				helper.setAuthorIconURL(rs.getString("authorIconURL"));
-				helper.setTitle(rs.getString("title"));
-				helper.setTitleURL(rs.getString("titleURL"));
-				helper.setDescription(rs.getString("description"));
-				helper.setColor(rs.getString("color"));
-				helper.setImage(rs.getString("image"));
-				helper.setThumbnail(rs.getString("thumbnail"));
-				helper.setFields(jsonToArrayList(rs.getString("fields")));
-				helper.setFooter(rs.getString("footer"));
-				helper.setFooterIconURL(rs.getString("footerIconURL"));
-				helper.setMessageID(rs.getLong("messageID"));
+				discordEmbed.setAuthorName(rs.getString("authorName"));
+				discordEmbed.setAuthorURL(rs.getString("authorURL"));
+				discordEmbed.setAuthorIconURL(rs.getString("authorIconURL"));
+				discordEmbed.setTitle(rs.getString("title"));
+				discordEmbed.setTitleURL(rs.getString("titleURL"));
+				discordEmbed.setDescription(rs.getString("description"));
+				discordEmbed.setColor(rs.getString("color"));
+				discordEmbed.setImage(rs.getString("image"));
+				discordEmbed.setThumbnail(rs.getString("thumbnail"));
+				discordEmbed.setFields(jsonToArrayList(rs.getString("fields")));
+				discordEmbed.setFooter(rs.getString("footer"));
+				discordEmbed.setFooterIconURL(rs.getString("footerIconURL"));
+				discordEmbed.setMessageID(rs.getLong("messageID"));
 			}
-			return helper;
+			return discordEmbed;
 
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 
-		return helper;
+		return discordEmbed;
 	}
 
 	public CustomEmbed getByMessageID(String messageID) {
-		CustomEmbed helper = new CustomEmbed();
+		CustomEmbed discordEmbed = new CustomEmbed();
 
 		String select = "SELECT * FROM customEmbeds WHERE messageID = ?";
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(select)) {
@@ -112,47 +112,47 @@ public class Database {
 			ResultSet rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				helper.setAuthorName(rs.getString("authorName"));
-				helper.setAuthorURL(rs.getString("authorURL"));
-				helper.setAuthorIconURL(rs.getString("authorURL"));
-				helper.setTitle(rs.getString("title"));
-				helper.setTitleURL(rs.getString("titleURL"));
-				helper.setDescription(rs.getString("description"));
-				helper.setColor(rs.getString("color"));
-				helper.setImage(rs.getString("image"));
-				helper.setThumbnail(rs.getString("thumbnail"));
-				helper.setFields(jsonToArrayList(rs.getString("fields")));
-				helper.setFooter(rs.getString("footer"));
-				helper.setFooterIconURL(rs.getString("footerIconURL"));
-				helper.setMessageID(rs.getLong("messageID"));
+				discordEmbed.setAuthorName(rs.getString("authorName"));
+				discordEmbed.setAuthorURL(rs.getString("authorURL"));
+				discordEmbed.setAuthorIconURL(rs.getString("authorURL"));
+				discordEmbed.setTitle(rs.getString("title"));
+				discordEmbed.setTitleURL(rs.getString("titleURL"));
+				discordEmbed.setDescription(rs.getString("description"));
+				discordEmbed.setColor(rs.getString("color"));
+				discordEmbed.setImage(rs.getString("image"));
+				discordEmbed.setThumbnail(rs.getString("thumbnail"));
+				discordEmbed.setFields(jsonToArrayList(rs.getString("fields")));
+				discordEmbed.setFooter(rs.getString("footer"));
+				discordEmbed.setFooterIconURL(rs.getString("footerIconURL"));
+				discordEmbed.setMessageID(rs.getLong("messageID"));
 			}
-			return helper;
+			return discordEmbed;
 
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 
-		return helper;
+		return discordEmbed;
 	}
 
 	// Adds or updates embeds into customEmbeds table
-	public void save(CustomEmbed helper) {
+	public void save(CustomEmbed discordEmbed) {
 		String operation = "INSERT OR REPLACE INTO customEmbeds(authorName, authorURL, authorIconURL, title, titleURL, description, color, image, thumbnail, fields, footer, footerIconURL, messageID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(operation)) {
-			pstmt.setString(1, helper.getAuthorName());
-			pstmt.setString(2, helper.getAuthorURL());
-			pstmt.setString(3, helper.getAuthorIconURL());
-			pstmt.setString(4, helper.getTitle());
-			pstmt.setString(5, helper.getTitleURL());
-			pstmt.setString(6, helper.getDescription());
-			pstmt.setString(7, Integer.toString(helper.getColor().getRGB()));
-			pstmt.setString(8, helper.getImage());
-			pstmt.setString(9, helper.getThumbnail());
-			pstmt.setString(10, toJson(helper.getFields()));
-			pstmt.setString(11, helper.getFooter());
-			pstmt.setString(12, helper.getFooterIconURL());
-			pstmt.setLong(13, helper.getMessageID());
+			pstmt.setString(1, discordEmbed.getAuthorName());
+			pstmt.setString(2, discordEmbed.getAuthorURL());
+			pstmt.setString(3, discordEmbed.getAuthorIconURL());
+			pstmt.setString(4, discordEmbed.getTitle());
+			pstmt.setString(5, discordEmbed.getTitleURL());
+			pstmt.setString(6, discordEmbed.getDescription());
+			pstmt.setString(7, Integer.toString(discordEmbed.getColor().getRGB()));
+			pstmt.setString(8, discordEmbed.getImage());
+			pstmt.setString(9, discordEmbed.getThumbnail());
+			pstmt.setString(10, toJson(discordEmbed.getFields()));
+			pstmt.setString(11, discordEmbed.getFooter());
+			pstmt.setString(12, discordEmbed.getFooterIconURL());
+			pstmt.setLong(13, discordEmbed.getMessageID());
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
