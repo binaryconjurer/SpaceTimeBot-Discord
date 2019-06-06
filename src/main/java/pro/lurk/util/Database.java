@@ -146,7 +146,7 @@ public class Database {
 			pstmt.setString(4, helper.getTitle());
 			pstmt.setString(5, helper.getTitleURL());
 			pstmt.setString(6, helper.getDescription());
-			pstmt.setString(7, helper.getColor());
+			pstmt.setString(7, Integer.toString(helper.getColor().getRGB()));
 			pstmt.setString(8, helper.getImage());
 			pstmt.setString(9, helper.getThumbnail());
 			pstmt.setString(10, toJson(helper.getFields()));
