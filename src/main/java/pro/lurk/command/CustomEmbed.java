@@ -1,7 +1,10 @@
 package pro.lurk.command;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+
+import pro.lurk.util.HexColorValidator;
 
 public class CustomEmbed {
 
@@ -11,7 +14,7 @@ public class CustomEmbed {
 	private String title = "";
 	private String titleURL = "";
 	private String description = "";
-	private String color = "0xd96017";
+	private Color color = Color.WHITE;
 	private String image = "";
 	private String thumbnail = "";
 	// private HashMap<String, String> fields = new HashMap<String, String>();
@@ -20,8 +23,11 @@ public class CustomEmbed {
 	private String footerIconURL = "";
 	private long messageID = 0;
 
+	// The arguments used to specify properties an element of the Custom Discord Embed. 
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
 			"ft", "fd", "fi", "footer", "footerIconURL", "m" };
+
+	HexColorValidator hexColorValidator = new HexColorValidator();
 
 	// Creates an Empty Custom Embed with "Default settings"
 	public CustomEmbed() {
@@ -30,7 +36,12 @@ public class CustomEmbed {
 
 	// Creates a CustomEmbed based on data parsed from user
 	public CustomEmbed(LinkedHashMap<String, ArrayList<String>> input) {
-		// Checks to see if user has input the follow parms and puts them into the object
+		configCustomEmbed(input);
+	}
+
+	public void configCustomEmbed(LinkedHashMap<String, ArrayList<String>> input) {
+		// Checks to see if user has input the follow args and puts them into the
+		// object
 		if (!input.get("author").isEmpty()) {
 			authorName = input.get("author").get(0);
 		}
@@ -49,9 +60,9 @@ public class CustomEmbed {
 		if (!input.get("d").isEmpty()) {
 			description = input.get("d").get(0);
 		}
-		// TODO: Have logic to add hex without 0x and be able to use colors directly like blue
 		if (!input.get("c").isEmpty()) {
-			color = input.get("c").get(0);
+			String userColor = input.get("c").get(0).toLowerCase();
+			color = parseColor(userColor);
 		}
 		if (!input.get("image").isEmpty()) {
 			image = input.get("image").get(0);
@@ -66,13 +77,63 @@ public class CustomEmbed {
 		if (!input.get("footerIconURL").isEmpty()) {
 			footerIconURL = input.get("footerIconURL").get(0);
 		}
-		// Fields
-//		if (!input.get("-ft").isEmpty() && !input.get("-fd").isEmpty() && !input.get("-fi").isEmpty()) {
-//			fields.add(new CustomEmbedField(1, input.get("-ft").get(0), input.get("-fd").get(0), false));
-//		}
 	}
-	
-	
+
+	private Color parseColor(String userColor) {
+		Color color = Color.WHITE;
+		// If user enters in a hex color value parse String into a Color.
+		if (hexColorValidator.isHex(userColor)) {
+			color = new Color(Integer.parseInt(userColor, 16));
+			return color;
+		}
+
+		switch (userColor) {
+		case "white":
+			color = Color.WHITE;
+			break;
+		case "lightGray":
+		case "LIGHT_GRAY":
+			color = Color.LIGHT_GRAY;
+			break;
+		case "gray":
+			color = Color.GRAY;
+			break;
+		case "darkGray":
+		case "DARK_GRAY":
+			color = Color.DARK_GRAY;
+			break;
+		case "black":
+			color = Color.BLACK;
+			break;
+		case "red":
+			color = Color.RED;
+			break;
+		case "pink":
+			color = Color.PINK;
+			break;
+		case "orange":
+			color = Color.ORANGE;
+			break;
+		case "yellow":
+			color = Color.YELLOW;
+			break;
+		case "green":
+			color = Color.GREEN;
+			break;
+		case "magenta":
+			color = Color.MAGENTA;
+			break;
+		case "cyan":
+			color = Color.CYAN;
+			break;
+		case "blue":
+			color = Color.BLUE;
+			break;
+		default:
+			color = new Color(Integer.parseInt(userColor));
+		}
+		return color;
+	}
 
 	public String getFooterIconURL() {
 		return footerIconURL;
@@ -151,12 +212,12 @@ public class CustomEmbed {
 		this.description = description;
 	}
 
-	public String getColor() {
+	public Color getColor() {
 		return color;
 	}
 
 	public void setColor(String color) {
-		this.color = color;
+		this.color = parseColor(color);
 	}
 
 	public String getImage() {
