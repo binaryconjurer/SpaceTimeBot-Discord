@@ -1,6 +1,5 @@
 package pro.lurk.command;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,8 +85,16 @@ public class CustomEmbedManager extends Command {
 			case "field":
 				modifyFields();
 				break;
+			// TODO: Add copy, move, and swap.
+			case "copy":
+				break;
+			case "move":
+				break;
+			case "swap":
+				break;
 			}
 		}
+
 	}
 
 	// Use this to add an embed to the system.
@@ -108,10 +115,10 @@ public class CustomEmbedManager extends Command {
 			if (!commandArgumentsFromUser.get("t").isEmpty()) {
 				// Creates CustomEmbed from parse, sends it to Discord while recording it's
 				// message id, then saving to database.
-				CustomEmbed helper = new CustomEmbed(commandArgumentsFromUser);
-				channel.sendMessage(makeDiscordFormattedEmbed(helper).build()).queue();
-				helper.setMessageID(getLastMessageIDByUser(channel, Bot.getAPI().getSelfUser()));
-				db.save(helper);
+				CustomEmbed discordEmbed = new CustomEmbed(commandArgumentsFromUser);
+				channel.sendMessage(makeDiscordFormattedEmbed(discordEmbed).build()).queue();
+				discordEmbed.setMessageID(getLastMessageIDByUser(channel, Bot.getAPI().getSelfUser()));
+				db.save(discordEmbed);
 				return;
 			}
 		}
@@ -137,18 +144,10 @@ public class CustomEmbedManager extends Command {
 			}
 			// Edit by Title
 			if (userMessage.startsWith(".embed edit -t")) {
-				CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
-				CustomEmbed updatedHelper = editCustomEmbed(helper, commandArgumentsFromUser, "t");
-				embedUpdate(updatedHelper, channel);
-				db.save(updatedHelper);
-				return;
-			}
-			// Edit by MessageID
-			if (userMessage.startsWith(".embed edit -m")) {
-				CustomEmbed helper = db.getByMessageID(commandArgumentsFromUser.get("m").get(0));
-				CustomEmbed updatedHelper = editCustomEmbed(helper, commandArgumentsFromUser, "m");
-				embedUpdate(updatedHelper, channel);
-				db.save(updatedHelper);
+				CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+				discordEmbed.configCustomEmbed(commandArgumentsFromUser);
+				embedUpdate(discordEmbed, channel);
+				db.save(discordEmbed);
 				return;
 			}
 		}
@@ -173,16 +172,9 @@ public class CustomEmbedManager extends Command {
 			// Delete by Title
 			if (userMessage.startsWith(".embed delete -t")) {
 				String embedTitle = commandArgumentsFromUser.get("t").get(0);
-				CustomEmbed helper = db.getbyTitle(embedTitle);
-				channel.deleteMessageById(helper.getMessageID()).queue();
+				CustomEmbed discordEmbed = db.getbyTitle(embedTitle);
+				channel.deleteMessageById(discordEmbed.getMessageID()).queue();
 				db.deleteByTitle(embedTitle);
-				return;
-			}
-			// Delete by MessageID
-			if (userMessage.startsWith(".embed delete -m")) {
-				long embedMessageID = Long.parseLong(commandArgumentsFromUser.get("m").get(0));
-				channel.deleteMessageById(embedMessageID).queue();
-				db.deleteByMessageID(embedMessageID);
 				return;
 			}
 		}
@@ -197,8 +189,8 @@ public class CustomEmbedManager extends Command {
 			return;
 		}
 		if (args.length > 2) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
-			embedUpdate(helper, channel);
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			embedUpdate(discordEmbed, channel);
 		}
 	}
 
@@ -259,16 +251,16 @@ public class CustomEmbedManager extends Command {
 
 		// Add by title
 		if (args[2].equalsIgnoreCase("-t")) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-			fields = helper.getFields();
+			fields = discordEmbed.getFields();
 			int fieldSize = fields.size();
 			if (fieldSize < 25) {
 				CustomEmbedField newField = new CustomEmbedField(fieldTitle, fieldDescription, isInline);
 				fields.add(newField);
-				helper.setFields(fields);
-				embedUpdate(helper, channel);
-				db.save(helper);
+				discordEmbed.setFields(fields);
+				embedUpdate(discordEmbed, channel);
+				db.save(discordEmbed);
 				return;
 			}
 			if (fieldSize == 25) {
@@ -290,9 +282,9 @@ public class CustomEmbedManager extends Command {
 		}
 
 		if (args[2].equalsIgnoreCase("-t")) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-			fields = helper.getFields();
+			fields = discordEmbed.getFields();
 			int fieldSize = fields.size();
 			// Search for the existing field title in order to edit.
 			for (int i = 0; i < fieldSize; i++) {
@@ -313,9 +305,9 @@ public class CustomEmbedManager extends Command {
 
 			}
 
-			helper.setFields(fields);
-			embedUpdate(helper, channel);
-			db.save(helper);
+			discordEmbed.setFields(fields);
+			embedUpdate(discordEmbed, channel);
+			db.save(discordEmbed);
 			return;
 		}
 	}
@@ -327,16 +319,16 @@ public class CustomEmbedManager extends Command {
 		boolean inline = false;
 		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-			fields = helper.getFields();
+			fields = discordEmbed.getFields();
 			int fieldSize = fields.size();
 			if (fieldSize < 25) {
 				CustomEmbedField newField = new CustomEmbedField(fieldTitle, fieldDescription, inline);
 				fields.add(insertNumber, newField);
-				helper.setFields(fields);
-				embedUpdate(helper, channel);
-				db.save(helper);
+				discordEmbed.setFields(fields);
+				embedUpdate(discordEmbed, channel);
+				db.save(discordEmbed);
 				return;
 			}
 			if (fieldSize == 25) {
@@ -358,13 +350,13 @@ public class CustomEmbedManager extends Command {
 		boolean inline = false;
 		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-			fields = helper.getFields();
+			fields = discordEmbed.getFields();
 			Collections.swap(fields, swap1, swap2);
-			helper.setFields(fields);
-			embedUpdate(helper, channel);
-			db.save(helper);
+			discordEmbed.setFields(fields);
+			embedUpdate(discordEmbed, channel);
+			db.save(discordEmbed);
 			return;
 		}
 	}
@@ -373,9 +365,9 @@ public class CustomEmbedManager extends Command {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
 		// Edit by type is always the 2nd (3rd) value.
 		if (args[2].equalsIgnoreCase("-t")) {
-			CustomEmbed helper = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-			fields = helper.getFields();
+			fields = discordEmbed.getFields();
 			int fieldSize = fields.size();
 			for (int i = 0; i < fieldSize; i++) {
 				if (fields.get(i).getFieldTitle().equals(fieldTitle)) {
@@ -383,134 +375,73 @@ public class CustomEmbedManager extends Command {
 					break;
 				}
 			}
-			helper.setFields(fields);
-			embedUpdate(helper, channel);
-			db.save(helper);
+			discordEmbed.setFields(fields);
+			embedUpdate(discordEmbed, channel);
+			db.save(discordEmbed);
 			return;
 
 		}
 	}
 
-	private CustomEmbed editCustomEmbed(CustomEmbed helper, LinkedHashMap<String, ArrayList<String>> input,
-			String editType) {
-		// Editing by Title and there is a new Title
-		if (editType.equals("t")) {
-			//
-			if (!input.get("t").isEmpty() && input.get("t").size() == 2) {
-				helper.setTitle(input.get("t").get(1));
-			}
-		}
-		// Editing by MessageID and there is a title arg
-		if (editType.equals("m")) {
-			if (!input.get("t").isEmpty() && input.get("t").size() == 1) {
-				helper.setTitle(input.get("t").get(0));
-			}
-		}
-		if (!input.get("t").isEmpty()) {
-			helper.setTitle(input.get("t").get(0));
-		}
-
-		if (!input.get("author").isEmpty()) {
-			helper.setAuthorName(input.get("author").get(0));
-		}
-		if (!input.get("aURL").isEmpty()) {
-			helper.setAuthorURL(input.get("aURL").get(0));
-		}
-		if (!input.get("aIconURL").isEmpty()) {
-			helper.setAuthorIconURL(input.get("aIconURL").get(0));
-		}
-
-		if (!input.get("tURL").isEmpty()) {
-			helper.setTitleURL(input.get("tURL").get(0));
-		}
-		if (!input.get("d").isEmpty()) {
-			helper.setDescription(input.get("d").get(0));
-		}
-		if (!input.get("c").isEmpty()) {
-			helper.setColor(input.get("c").get(0));
-		}
-		if (!input.get("image").isEmpty()) {
-			helper.setImage(input.get("image").get(0));
-		}
-		if (!input.get("thumbnail").isEmpty()) {
-			helper.setThumbnail(input.get("thumbnail").get(0));
-		}
-		// Fields
-		// TODO: Add proper field management
-		if (!input.get("fn").isEmpty() && !input.get("f").isEmpty() && !input.get("fd").isEmpty()) {
-			int fieldOrder = Integer.parseInt(input.get("fn").get(0));
-			String fieldName = input.get("f").get(0);
-			String fieldDescriptor = input.get("fd").get(0);
-			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
-		}
-		if (!input.get("footer").isEmpty()) {
-			helper.setFooter(input.get("footer").get(0));
-		}
-		if (!input.get("footerIconURL").isEmpty()) {
-			helper.setFooterIconURL(input.get("footerIconURL").get(0));
-		}
-		return helper;
+	private void embedUpdate(CustomEmbed discordEmbed, MessageChannel channel) {
+		channel.editMessageById(discordEmbed.getMessageID(), makeDiscordFormattedEmbed(discordEmbed).build()).queue();
 	}
 
-	private void embedUpdate(CustomEmbed helper, MessageChannel channel) {
-		channel.editMessageById(helper.getMessageID(), makeDiscordFormattedEmbed(helper).build()).queue();
-	}
-
-	private EmbedBuilder makeDiscordFormattedEmbed(CustomEmbed helper) {
+	private EmbedBuilder makeDiscordFormattedEmbed(CustomEmbed discordEmbed) {
 		EmbedBuilder customEmbed = new EmbedBuilder();
 		// Just AuthorName
 
-		customEmbed.setColor(new Color(Integer.decode(helper.getColor())));
+		customEmbed.setColor(discordEmbed.getColor());
 
 		// Just Author
-		if (!helper.getAuthorName().isEmpty() && helper.getAuthorURL().isEmpty()) {
-			customEmbed.setAuthor(helper.getAuthorName());
+		if (!discordEmbed.getAuthorName().isEmpty() && discordEmbed.getAuthorURL().isEmpty()) {
+			customEmbed.setAuthor(discordEmbed.getAuthorName());
 		}
 		// AuthorName and AuthorURL
-		if (!helper.getAuthorName().isEmpty() && !helper.getAuthorURL().isEmpty()) {
-			customEmbed.setAuthor(helper.getAuthorName(), helper.getAuthorURL());
+		if (!discordEmbed.getAuthorName().isEmpty() && !discordEmbed.getAuthorURL().isEmpty()) {
+			customEmbed.setAuthor(discordEmbed.getAuthorName(), discordEmbed.getAuthorURL());
 		}
 		// AuthorName and AuthorIconURL
-		if (!helper.getAuthorName().isEmpty() && helper.getAuthorURL().isEmpty()
-				&& !helper.getAuthorIconURL().isEmpty()) {
-			customEmbed.setAuthor(helper.getAuthorName(), null, helper.getAuthorIconURL());
+		if (!discordEmbed.getAuthorName().isEmpty() && discordEmbed.getAuthorURL().isEmpty()
+				&& !discordEmbed.getAuthorIconURL().isEmpty()) {
+			customEmbed.setAuthor(discordEmbed.getAuthorName(), null, discordEmbed.getAuthorIconURL());
 		}
 		// AuthorName, AuthorURL, and AuthorIconURL
-		if (!helper.getAuthorName().isEmpty() && !helper.getAuthorURL().isEmpty()
-				&& !helper.getAuthorIconURL().isEmpty()) {
-			customEmbed.setAuthor(helper.getAuthorName(), helper.getAuthorURL(), helper.getAuthorIconURL());
+		if (!discordEmbed.getAuthorName().isEmpty() && !discordEmbed.getAuthorURL().isEmpty()
+				&& !discordEmbed.getAuthorIconURL().isEmpty()) {
+			customEmbed.setAuthor(discordEmbed.getAuthorName(), discordEmbed.getAuthorURL(), discordEmbed.getAuthorIconURL());
 		}
 		// Just Title
-		if (!helper.getTitle().isEmpty() && helper.getTitleURL().isEmpty()) {
-			customEmbed.setTitle(helper.getTitle());
+		if (!discordEmbed.getTitle().isEmpty() && discordEmbed.getTitleURL().isEmpty()) {
+			customEmbed.setTitle(discordEmbed.getTitle());
 		}
 		// Title and TitleURL
-		if (!helper.getTitle().isEmpty() && !helper.getTitleURL().isEmpty()) {
-			customEmbed.setTitle(helper.getTitle(), helper.getTitleURL());
+		if (!discordEmbed.getTitle().isEmpty() && !discordEmbed.getTitleURL().isEmpty()) {
+			customEmbed.setTitle(discordEmbed.getTitle(), discordEmbed.getTitleURL());
 		}
 		// Description
-		if (!helper.getDescription().isEmpty()) {
-			customEmbed.setDescription(helper.getDescription());
+		if (!discordEmbed.getDescription().isEmpty()) {
+			customEmbed.setDescription(discordEmbed.getDescription());
 		}
 
 		// Image
-		if (!helper.getImage().isEmpty()) {
-			customEmbed.setImage(helper.getImage());
+		if (!discordEmbed.getImage().isEmpty()) {
+			customEmbed.setImage(discordEmbed.getImage());
 		}
 		// Thumbnail
-		if (!helper.getThumbnail().isEmpty()) {
-			customEmbed.setThumbnail(helper.getThumbnail());
+		if (!discordEmbed.getThumbnail().isEmpty()) {
+			customEmbed.setThumbnail(discordEmbed.getThumbnail());
 		}
 		// Just Footer
-		if (!helper.getFooter().isEmpty() && helper.getFooterIconURL().isEmpty()) {
-			customEmbed.setFooter(helper.getFooter(), null);
+		if (!discordEmbed.getFooter().isEmpty() && discordEmbed.getFooterIconURL().isEmpty()) {
+			customEmbed.setFooter(discordEmbed.getFooter(), null);
 		}
 		// Footer and Footer IconURL
-		if (!helper.getFooter().isEmpty() && !helper.getFooterIconURL().isEmpty()) {
-			customEmbed.setFooter(helper.getFooter(), helper.getFooterIconURL());
+		if (!discordEmbed.getFooter().isEmpty() && !discordEmbed.getFooterIconURL().isEmpty()) {
+			customEmbed.setFooter(discordEmbed.getFooter(), discordEmbed.getFooterIconURL());
 		}
-		if (!helper.getFields().isEmpty()) {
-			ArrayList<CustomEmbedField> fields = helper.getFields();
+		if (!discordEmbed.getFields().isEmpty()) {
+			ArrayList<CustomEmbedField> fields = discordEmbed.getFields();
 			for (CustomEmbedField field : fields) {
 				// Sets the title, description, and set inline status.
 				customEmbed.addField(field.getFieldTitle(), field.getFieldDescription(), field.isInline());
