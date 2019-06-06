@@ -30,9 +30,7 @@ public class Database {
 
 	public Database() {
 		this.connect = connect();
-		System.out.println("Connceted!");
 		createTables();
-		System.out.println("Created Tables!");
 	}
 
 	private String toJson(ArrayList<CustomEmbedField> list) {
