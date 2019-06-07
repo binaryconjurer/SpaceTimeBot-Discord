@@ -1,4 +1,4 @@
-package pro.lurk.command;
+package pro.lurk.command.CustomEmbed;
 
 public class CustomEmbedField /*implements Comparable<CustomEmbedField> */{
 

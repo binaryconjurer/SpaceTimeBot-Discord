@@ -1,5 +1,6 @@
-package pro.lurk.command;
+package pro.lurk.command.CustomEmbed;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import pro.lurk.SpaceTime.Bot;
+import pro.lurk.command.Command;
 import pro.lurk.util.CommandParser;
 import pro.lurk.util.Database;
 
@@ -24,7 +26,7 @@ public class CustomEmbedManager extends Command {
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
 			"ft", "fd", "fi", "footer", "footerIconURL", "m", "o", "insert", "swap" };
 
-	LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
+	private LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
 
 	private Database db = new Database();
 	private CommandParser commandParser = new CommandParser(commandArgs);
@@ -208,6 +210,7 @@ public class CustomEmbedManager extends Command {
 			userMessage = userMessage.toLowerCase();
 
 			// Operation arg is always 4th (5th) value.
+			// TODO: Swap -add
 			String commandOperator = args[4].toLowerCase();
 			switch (commandOperator) {
 			// Command Syntax:
@@ -272,8 +275,6 @@ public class CustomEmbedManager extends Command {
 	}
 
 	private void editField() {
-		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
-		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
 		// Sometimes inline isn't set so by default it's false, if it is specified used
 		// that value instead.
 		boolean isInline = false;
@@ -284,27 +285,38 @@ public class CustomEmbedManager extends Command {
 		if (args[2].equalsIgnoreCase("-t")) {
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
+			String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
+			String fieldDescription = "";
+
 			fields = discordEmbed.getFields();
 			int fieldSize = fields.size();
 			// Search for the existing field title in order to edit.
 			for (int i = 0; i < fieldSize; i++) {
 				if (fields.get(i).getFieldTitle().equals(fieldTitle)) {
+					// If user enters in a fieldDescription change it out.
+					if (!commandArgumentsFromUser.get("fd").isEmpty()) {
+						fieldDescription = commandArgumentsFromUser.get("fd").get(0);
+						fields.get(i).setFieldDescription(fieldDescription);
+					}
+					if (!commandArgumentsFromUser.get("fi").isEmpty()) {
+						isInline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
+						fields.get(i).setInline(isInline);
+					}
 					// If user enters in two field titles, one to search by, the other is the one to
 					// switch out.
 					// Also sets the field description from the user.
-					if (!commandArgumentsFromUser.get("ft").get(1).isEmpty()) {
-						fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
-						fields.get(i).setFieldDescription(fieldDescription);
-						fields.get(i).setInline(isInline);
-						break;
+					try {
+						if (!commandArgumentsFromUser.get("ft").get(1).isEmpty()) {
+							fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
+							break;
+						}
+					} catch (IndexOutOfBoundsException e) {
+						e.printStackTrace();
 					}
+					// 
 					fields.get(i).setFieldTitle(fieldTitle);
-					fields.get(i).setFieldDescription(fieldDescription);
-					fields.get(i).setInline(isInline);
 				}
-
 			}
-
 			discordEmbed.setFields(fields);
 			embedUpdate(discordEmbed, channel);
 			db.save(discordEmbed);
@@ -390,6 +402,8 @@ public class CustomEmbedManager extends Command {
 	private EmbedBuilder makeDiscordFormattedEmbed(CustomEmbed discordEmbed) {
 		EmbedBuilder customEmbed = new EmbedBuilder();
 		// Just AuthorName
+		
+//		customEmbed.setTimestamp(Instant.now());
 
 		customEmbed.setColor(discordEmbed.getColor());
 
@@ -409,7 +423,8 @@ public class CustomEmbedManager extends Command {
 		// AuthorName, AuthorURL, and AuthorIconURL
 		if (!discordEmbed.getAuthorName().isEmpty() && !discordEmbed.getAuthorURL().isEmpty()
 				&& !discordEmbed.getAuthorIconURL().isEmpty()) {
-			customEmbed.setAuthor(discordEmbed.getAuthorName(), discordEmbed.getAuthorURL(), discordEmbed.getAuthorIconURL());
+			customEmbed.setAuthor(discordEmbed.getAuthorName(), discordEmbed.getAuthorURL(),
+					discordEmbed.getAuthorIconURL());
 		}
 		// Just Title
 		if (!discordEmbed.getTitle().isEmpty() && discordEmbed.getTitleURL().isEmpty()) {

@@ -9,9 +9,9 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import pro.lurk.command.Calculator;
-import pro.lurk.command.CustomEmbedManager;
 import pro.lurk.command.HelpCommand;
 import pro.lurk.command.Meow;
+import pro.lurk.command.CustomEmbed.CustomEmbedManager;
 import pro.lurk.util.ConfigLoader;
 
 public class Bot {

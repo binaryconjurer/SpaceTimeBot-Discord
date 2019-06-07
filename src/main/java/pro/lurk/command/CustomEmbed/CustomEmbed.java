@@ -1,4 +1,4 @@
-package pro.lurk.command;
+package pro.lurk.command.CustomEmbed;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -23,7 +23,8 @@ public class CustomEmbed {
 	private String footerIconURL = "";
 	private long messageID = 0;
 
-	// The arguments used to specify properties an element of the Custom Discord Embed. 
+	// The arguments used to specify properties an element of the Custom Discord
+	// Embed.
 	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
 			"ft", "fd", "fi", "footer", "footerIconURL", "m" };
 
@@ -52,7 +53,19 @@ public class CustomEmbed {
 			authorIconURL = input.get("aIconURL").get(0);
 		}
 		if (!input.get("t").isEmpty()) {
-			title = input.get("t").get(0);
+			// If there are two titles set by the user change it to the second
+			try {
+				if (!input.get("t").get(1).isEmpty()) {
+					title = input.get("t").get(1);
+				}
+			} catch (IndexOutOfBoundsException e) {
+				// e.printStackTrace();
+			} finally {
+				title = input.get("t").get(0);
+			}
+
+			// Otherwise continue using the same title
+
 		}
 		if (!input.get("tURL").isEmpty()) {
 			titleURL = input.get("tURL").get(0);

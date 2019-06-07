@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import pro.lurk.command.CustomEmbed;
-import pro.lurk.command.CustomEmbedField;
+import pro.lurk.command.CustomEmbed.CustomEmbed;
+import pro.lurk.command.CustomEmbed.CustomEmbedField;
 
 public class Database {
 
