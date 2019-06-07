@@ -18,7 +18,7 @@ public class CommandParser {
 		this.commandArgs = null;
 
 	}
-	
+
 	public boolean isCommandEmpty(LinkedHashMap<String, ArrayList<String>> parsedCommand) {
 		int count = 0;
 		int amountOfArgs = commandArgs.length;
@@ -59,9 +59,12 @@ public class CommandParser {
 		return finalArgs;
 	}
 
-	// Splits by -
+	// Splits by " -"
+	// We do it this way to prevent cutting out content that contains - inbetween
+	// like urls
+	// TODO: Add in regex rules to have a more accurate split for edge cases.
 	private String[] splitByHyphen(String command) {
-		String[] split = command.split("-");
+		String[] split = command.split(" -");
 		if (split.length == 1) {
 			return null;
 		}
@@ -86,7 +89,7 @@ public class CommandParser {
 	private ArrayList<String> getCommandArgumentContents(String[] command, String argType) {
 		ArrayList<String> listOfContents = new ArrayList<String>();
 		String contents = "";
-		
+
 		if (command == null) {
 			return listOfContents;
 		}
