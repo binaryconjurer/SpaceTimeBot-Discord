@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import pro.lurk.command.Calculator;
+import pro.lurk.command.Clear;
 import pro.lurk.command.HelpCommand;
 import pro.lurk.command.Meow;
 import pro.lurk.command.CustomEmbed.CustomEmbedManager;
@@ -44,6 +45,7 @@ public class Bot {
 			jdaBuilder.addEventListener(help.registerCommand(new Calculator()));
 			jdaBuilder.addEventListener(help.registerCommand(new CustomEmbedManager()));
 			jdaBuilder.addEventListener(help.registerCommand(new Meow()));
+			jdaBuilder.addEventListener(help.registerCommand(new Clear()));
 			// Finally build
 			api = jdaBuilder.build();
 			api.awaitReady();
