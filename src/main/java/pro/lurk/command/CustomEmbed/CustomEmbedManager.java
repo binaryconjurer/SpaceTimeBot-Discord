@@ -1,6 +1,5 @@
 package pro.lurk.command.CustomEmbed;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,11 +32,13 @@ public class CustomEmbedManager extends Command {
 	// private CommandParser fieldCommandParser = new CommandParser(commandArgs);
 
 	// Useful data that doesn't change
-	String args[] = null;
-	Guild guild = null;
-	MessageChannel channel = null;
-	User author = null;
-	Message message = null;
+	private String args[] = null;
+	private Guild guild = null;
+	private MessageChannel channel = null;
+	private User author = null;
+	private Message message = null;
+	private String userMessage = "";
+	private String userMessageLower = "";
 
 	// Error Messages
 	private String INVALID_ERROR_MESSAGE = ".embed requires you to use an operation like add, edit, delete, forceupdate, or field followed by at least one argument!";
@@ -48,7 +49,8 @@ public class CustomEmbedManager extends Command {
 	private String FORCE_UPDATE_ERROR_MESSAGE = "Please specify which embed you wish to force update!";
 	// Field Error Messages
 	private String FIELD_ERROR_MESSAGE = "To edit an embed you must speficy a title alongside field args -ft, -fd, or -fi . You may include other options with additoinal arguments. Use .help .embed for more info!";
-	private String FIELD_OVER25 = "You are trying to add an embed over the cap of 25. Please consider removing or modifying the existing stack.";
+	private String FIELD_OVER25_ERROR_MESSAGE = "You are trying to add an embed over the cap of 25. Please consider removing or modifying the existing stack.";
+	private String FIELD_NEGATIVE_NUMBER_INPUT_ERROR_MESSAGE = "You have input a negative number for your operation, please use a number from 1-25.";
 
 	@Override
 	public void onCommand(MessageReceivedEvent event, String[] args) {
@@ -59,6 +61,9 @@ public class CustomEmbedManager extends Command {
 		channel = event.getChannel();
 		author = event.getAuthor();
 		message = event.getMessage();
+
+		this.userMessage = message.getContentRaw();
+		this.userMessageLower = userMessage.toLowerCase();
 
 		if (isEnoughArguments() && isValidOperation()) {
 			// Parses user input
@@ -75,6 +80,10 @@ public class CustomEmbedManager extends Command {
 			case "edit":
 				editEmbed();
 				break;
+			// TODO: Add list, copy, move, and swap.
+			case "list":
+				// listEmbeds();
+				break;
 			// .embed delete
 			case "delete":
 				deleteEmbed();
@@ -87,7 +96,6 @@ public class CustomEmbedManager extends Command {
 			case "field":
 				modifyFields();
 				break;
-			// TODO: Add copy, move, and swap.
 			case "copy":
 				break;
 			case "move":
@@ -136,16 +144,14 @@ public class CustomEmbedManager extends Command {
 		}
 		// This is the main logic behind adding a command and it's checks.
 		if (args.length > 2) {
-			String userMessage = message.getContentDisplay();
 			// Converts message to lower case so .startsWith methods are case insensitive
-			userMessage = userMessage.toLowerCase();
 			// If user doesn't detail what he wants for any arugment.
 			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
 				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
 				return;
 			}
 			// Edit by Title
-			if (userMessage.startsWith(".embed edit -t")) {
+			if (userMessageLower.startsWith(".embed edit -t")) {
 				CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 				discordEmbed.configCustomEmbed(commandArgumentsFromUser);
 				embedUpdate(discordEmbed, channel);
@@ -164,15 +170,13 @@ public class CustomEmbedManager extends Command {
 			return;
 		}
 		if (args.length > 2) {
-			String userMessage = message.getContentDisplay();
-			userMessage = userMessage.toLowerCase();
 			// If user doesn't detail what he wants for any arugment.
 			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
 				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
 				return;
 			}
 			// Delete by Title
-			if (userMessage.startsWith(".embed delete -t")) {
+			if (userMessageLower.startsWith(".embed delete -t")) {
 				String embedTitle = commandArgumentsFromUser.get("t").get(0);
 				CustomEmbed discordEmbed = db.getbyTitle(embedTitle);
 				channel.deleteMessageById(discordEmbed.getMessageID()).queue();
@@ -205,22 +209,19 @@ public class CustomEmbedManager extends Command {
 		}
 		// This is the main logic behind adding a command and it's checks.
 		if (args.length > 2) {
-			// Converts message to lower case so .startsWith methods are case insensitive
-			String userMessage = message.getContentDisplay();
-			userMessage = userMessage.toLowerCase();
-
-			// Operation arg is always 4th (5th) value.
-			// TODO: Swap -add
-			String commandOperator = args[4].toLowerCase();
-			switch (commandOperator) {
 			// Command Syntax:
+			// .embed field -add
+			String commandOperator = args[2].toLowerCase();
+
+			switch (commandOperator) {
 			// .embed field -t meow -add -ft meow -fd meow2
-			case "-add":
+			// .embed field -add -t meow -ft meow -fd meow2
+			case "add":
 				addField();
 				break;
 			// Command Syntax:
 			// .embed field -t meow -edit -ft meow -ft meow2 -fd meow3
-			case "-edit":
+			case "edit":
 				editField();
 				break;
 			// Command Syntax:
@@ -235,7 +236,7 @@ public class CustomEmbedManager extends Command {
 				break;
 			// Command Syntax:
 			// .embed field -t meow -delete -ft meow
-			case "-delete":
+			case "delete":
 				deleteField();
 				break;
 			}
@@ -253,7 +254,7 @@ public class CustomEmbedManager extends Command {
 		}
 
 		// Add by title
-		if (args[2].equalsIgnoreCase("-t")) {
+		if (userMessageLower.startsWith(".embed field add -t")) {
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
 			fields = discordEmbed.getFields();
@@ -267,7 +268,7 @@ public class CustomEmbedManager extends Command {
 				return;
 			}
 			if (fieldSize == 25) {
-				channel.sendMessage(author.getAsMention() + ", " + FIELD_OVER25).queue();
+				channel.sendMessage(author.getAsMention() + ", " + FIELD_OVER25_ERROR_MESSAGE).queue();
 				return;
 			}
 
@@ -282,7 +283,7 @@ public class CustomEmbedManager extends Command {
 			isInline = Boolean.parseBoolean(commandArgumentsFromUser.get("fi").get(0));
 		}
 
-		if (args[2].equalsIgnoreCase("-t")) {
+		if (userMessageLower.startsWith(".embed field edit -t")) {
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
 			String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
@@ -293,6 +294,9 @@ public class CustomEmbedManager extends Command {
 			// Search for the existing field title in order to edit.
 			for (int i = 0; i < fieldSize; i++) {
 				if (fields.get(i).getFieldTitle().equals(fieldTitle)) {
+					if (commandArgumentsFromUser.get("ft").size() > 1) {
+						fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
+					}
 					// If user enters in a fieldDescription change it out.
 					if (!commandArgumentsFromUser.get("fd").isEmpty()) {
 						fieldDescription = commandArgumentsFromUser.get("fd").get(0);
@@ -305,16 +309,6 @@ public class CustomEmbedManager extends Command {
 					// If user enters in two field titles, one to search by, the other is the one to
 					// switch out.
 					// Also sets the field description from the user.
-					try {
-						if (!commandArgumentsFromUser.get("ft").get(1).isEmpty()) {
-							fields.get(i).setFieldTitle(commandArgumentsFromUser.get("ft").get(1));
-							break;
-						}
-					} catch (IndexOutOfBoundsException e) {
-						e.printStackTrace();
-					}
-					// 
-					fields.get(i).setFieldTitle(fieldTitle);
 				}
 			}
 			discordEmbed.setFields(fields);
@@ -325,12 +319,18 @@ public class CustomEmbedManager extends Command {
 	}
 
 	private void insertField() {
-		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
-		String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
-		int insertNumber = Integer.parseInt(commandArgumentsFromUser.get("insert").get(0));
+		int insertNumber = Integer.parseInt(commandArgumentsFromUser.get("insert").get(0)) - 1;
 		boolean inline = false;
-		// Edit by type is always the 2nd (3rd) value.
-		if (args[2].equalsIgnoreCase("-t")) {
+
+		// Checks to see if the user is using 1-25 for their insert.
+		if (insertNumber < 0) {
+			channel.sendMessage(author.getAsMention() + ", " + FIELD_NEGATIVE_NUMBER_INPUT_ERROR_MESSAGE).queue();
+			return;
+		}
+
+		if (userMessageLower.startsWith(".embed field -insert")) {
+			String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
+			String fieldDescription = commandArgumentsFromUser.get("fd").get(0);
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
 			fields = discordEmbed.getFields();
@@ -344,7 +344,7 @@ public class CustomEmbedManager extends Command {
 				return;
 			}
 			if (fieldSize == 25) {
-				channel.sendMessage(author.getAsMention() + ", " + FIELD_OVER25).queue();
+				channel.sendMessage(author.getAsMention() + ", " + FIELD_OVER25_ERROR_MESSAGE).queue();
 				return;
 			}
 
@@ -352,16 +352,20 @@ public class CustomEmbedManager extends Command {
 	}
 
 	private void swapField() {
-		// int swapNumber = Integer.parseInt();
 		ArrayList<String> swapValues = commandArgumentsFromUser.get("swap");
 		String swapNums = swapValues.get(0);
 		String[] swapArray = swapNums.split(" ");
 
-		int swap1 = Integer.parseInt(swapArray[0]);
-		int swap2 = Integer.parseInt(swapArray[1]);
+		int swap1 = Integer.parseInt(swapArray[0]) - 1;
+		int swap2 = Integer.parseInt(swapArray[1]) - 1;
 		boolean inline = false;
-		// Edit by type is always the 2nd (3rd) value.
-		if (args[2].equalsIgnoreCase("-t")) {
+
+		// Checks to see if the user is using 1-25 for their swap.
+		if (swap1 < 0 || swap2 < 0) {
+			channel.sendMessage(author.getAsMention() + ", " + FIELD_NEGATIVE_NUMBER_INPUT_ERROR_MESSAGE).queue();
+			return;
+		}
+		if (userMessageLower.startsWith(".embed field -swap")) {
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
 			fields = discordEmbed.getFields();
@@ -375,8 +379,7 @@ public class CustomEmbedManager extends Command {
 
 	private void deleteField() {
 		String fieldTitle = commandArgumentsFromUser.get("ft").get(0);
-		// Edit by type is always the 2nd (3rd) value.
-		if (args[2].equalsIgnoreCase("-t")) {
+		if (userMessageLower.startsWith(".embed field delete -t")) {
 			CustomEmbed discordEmbed = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
 			ArrayList<CustomEmbedField> fields = new ArrayList<CustomEmbedField>();
 			fields = discordEmbed.getFields();
@@ -402,8 +405,8 @@ public class CustomEmbedManager extends Command {
 	private EmbedBuilder makeDiscordFormattedEmbed(CustomEmbed discordEmbed) {
 		EmbedBuilder customEmbed = new EmbedBuilder();
 		// Just AuthorName
-		
-//		customEmbed.setTimestamp(Instant.now());
+
+		// customEmbed.setTimestamp(Instant.now());
 
 		customEmbed.setColor(discordEmbed.getColor());
 
@@ -477,7 +480,6 @@ public class CustomEmbedManager extends Command {
 	// Parses user input into a LinkedHashMap with key being the tag leading to a
 	// ArrayList<String> of it's matching info
 	private LinkedHashMap<String, ArrayList<String>> parseUserInput() {
-		String userMessage = message.getContentDisplay();
 		LinkedHashMap<String, ArrayList<String>> commandArgumentsFromUser = new LinkedHashMap<String, ArrayList<String>>();
 		// Parses user input
 		commandArgumentsFromUser = commandParser.parse(userMessage);
