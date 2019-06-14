@@ -25,9 +25,6 @@ public class CustomEmbed {
 
 	// The arguments used to specify properties an element of the Custom Discord
 	// Embed.
-	private String[] commandArgs = { "author", "aURL", "aIconURL", "t", "tURL", "d", "c", "image", "thumbnail", "fn",
-			"ft", "fd", "fi", "footer", "footerIconURL", "m" };
-
 	HexColorValidator hexColorValidator = new HexColorValidator();
 
 	// Creates an Empty Custom Embed with "Default settings"
@@ -42,7 +39,7 @@ public class CustomEmbed {
 
 	public void configCustomEmbed(LinkedHashMap<String, ArrayList<String>> input) {
 		// Checks to see if user has input the follow args and puts them into the
-		// object
+		// object.
 		if (!input.get("author").isEmpty()) {
 			authorName = input.get("author").get(0);
 		}
@@ -53,19 +50,14 @@ public class CustomEmbed {
 			authorIconURL = input.get("aIconURL").get(0);
 		}
 		if (!input.get("t").isEmpty()) {
-			// If there are two titles set by the user change it to the second
-			try {
-				if (!input.get("t").get(1).isEmpty()) {
-					title = input.get("t").get(1);
-				}
-			} catch (IndexOutOfBoundsException e) {
-				// e.printStackTrace();
-			} finally {
+
+			// If there are two titles set by the user change it to the second.
+			if (input.get("t").size() > 1) {
+				title = input.get("t").get(1);
+			// Otherwise continue to use the regular title.
+			} else {
 				title = input.get("t").get(0);
 			}
-
-			// Otherwise continue using the same title
-
 		}
 		if (!input.get("tURL").isEmpty()) {
 			titleURL = input.get("tURL").get(0);
