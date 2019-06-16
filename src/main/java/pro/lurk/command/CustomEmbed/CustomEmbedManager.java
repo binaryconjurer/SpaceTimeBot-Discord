@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import pro.lurk.SpaceTime.Bot;
@@ -42,9 +43,10 @@ public class CustomEmbedManager extends Command {
 
 	// Error Messages
 	private String INVALID_ERROR_MESSAGE = ".embed requires you to use an operation like add, edit, delete, forceupdate, or field followed by at least one argument!";
-	private String ADD_ERROR_MESSAGE = "To add an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
-	private String EDIT_ERROR_MESSAGE = "To edit an embed you must speficy a title or Message ID. You may include other options with additoinal arguments. Use .help .embed for more info!";
-	private String DELETE_ERROR_MESSAGE = "To delete an embed you must speficy a title or Message ID. Use .help .embed for more info!";
+	private String ADD_ERROR_MESSAGE = "To add an embed you must speficy a title. You may include other options with additoinal arguments. Use .help .embed for more info!";
+	private String EDIT_ERROR_MESSAGE = "To edit an embed you must speficy a title. You may include other options with additoinal arguments. Use .help .embed for more info!";
+	private String COPY_ERROR_MESSAGE = "To copy an embed you must speficy the title of the embed you wish to copy and a new name. use .help .embed for more info!";
+	private String DELETE_ERROR_MESSAGE = "To delete an embed you must speficy a title. Use .help .embed for more info!";
 	private String MISSING_CONTENTS_ERROR_MESSAGE = "Please specify the contents in your arugment(s)!";
 	private String FORCE_UPDATE_ERROR_MESSAGE = "Please specify which embed you wish to force update!";
 	// Field Error Messages
@@ -84,6 +86,16 @@ public class CustomEmbedManager extends Command {
 			case "list":
 				listEmbeds();
 				break;
+			// .embed copy -t [name] [new name] 
+		    // .embed copy -t [name] [new name] -m [channel messageID]
+			case "copy":
+				copyEmbed();
+				break;
+			// TODO: move, and swap.
+			case "move":
+				break;
+			case "swap":
+				break;
 			// .embed delete
 			case "delete":
 				deleteEmbed();
@@ -95,13 +107,6 @@ public class CustomEmbedManager extends Command {
 			// .embed field
 			case "field":
 				modifyFields();
-				break;
-			// TODO: Add list, copy, move, and swap.
-			case "copy":
-				break;
-			case "move":
-				break;
-			case "swap":
 				break;
 			}
 		}
@@ -174,6 +179,46 @@ public class CustomEmbedManager extends Command {
 			String formattedEmbeds = String.join(", ", customEmbedList);
 			channel.sendMessageFormat("%s, Here is a list of the custom embeds in the database: %s.",
 					author.getAsMention(), formattedEmbeds).queue();
+			return;
+		}
+	}
+
+	// Use this to copy an embed in a save as function.
+	private void copyEmbed() {
+		if (args.length == 2) {
+			channel.sendMessage(author.getAsMention() + ", " + COPY_ERROR_MESSAGE).queue();
+			return;
+		}
+		// This is the main logic behind adding a command and it's checks.
+		if (args.length > 2) {
+			// Converts message to lower case so .startsWith methods are case insensitive
+			// If user doesn't detail what he wants for any arugment.
+			if (commandParser.isCommandEmpty(commandArgumentsFromUser)) {
+				channel.sendMessage(author.getAsMention() + ", " + MISSING_CONTENTS_ERROR_MESSAGE).queue();
+				return;
+			}
+			// .embed copy -t meow -t meow2 -m [channel messageID]
+			if (userMessageLower.startsWith(".embed copy -t") && commandArgumentsFromUser.get("m").size() == 1) {
+				CustomEmbed discordEmbed1 = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+				CustomEmbed discordEmbed2 = discordEmbed1;
+				TextChannel userDefinedChannel = Bot.getAPI()
+						.getTextChannelById(commandArgumentsFromUser.get("m").get(0));
+				discordEmbed2.setTitle(commandArgumentsFromUser.get("t").get(1));
+				userDefinedChannel.sendMessage(makeDiscordFormattedEmbed(discordEmbed2).build()).queue();
+				discordEmbed2.setMessageID(getLastMessageIDByUser(userDefinedChannel, Bot.getAPI().getSelfUser()));
+				db.save(discordEmbed2);
+				return;
+			}
+			// .embed copy -t meow -t meow2
+			if (userMessageLower.startsWith(".embed copy -t") && commandArgumentsFromUser.get("t").size() > 1) {
+				CustomEmbed discordEmbed1 = db.getbyTitle(commandArgumentsFromUser.get("t").get(0));
+				CustomEmbed discordEmbed2 = discordEmbed1;
+				discordEmbed2.setTitle(commandArgumentsFromUser.get("t").get(1));
+				channel.sendMessage(makeDiscordFormattedEmbed(discordEmbed2).build()).queue();
+				discordEmbed2.setMessageID(getLastMessageIDByUser(channel, Bot.getAPI().getSelfUser()));
+				db.save(discordEmbed2);
+				return;
+			}
 			return;
 		}
 	}
@@ -528,7 +573,7 @@ public class CustomEmbedManager extends Command {
 		// When the user has entered enough arguments 3 or more items.
 		// Ex: .embed add -t Cool Links
 		if (args[1].equals("add") || args[1].equals("edit") || args[1].equals("delete") || args[1].equals("forceupdate")
-				|| args[1].equals("field") || args[1].equals("list")) {
+				|| args[1].equals("field") || args[1].equals("list") || args[1].equals("copy")) {
 			return true;
 		} else {
 			return false;
