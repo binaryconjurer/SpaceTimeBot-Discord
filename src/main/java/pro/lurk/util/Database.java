@@ -101,6 +101,29 @@ public class Database {
 		return discordEmbed;
 	}
 
+	public ArrayList<String> getListOfCustomEmbeds() {
+
+		ArrayList<String> customEmbedList = new ArrayList<String>();
+		String select = "SELECT title FROM customEmbeds";
+		try {
+			Connection conn = this.connect(); 
+			PreparedStatement pstmt = conn.prepareStatement(select);
+			
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				String title = rs.getString("title");
+				customEmbedList.add(title);
+			}
+			return customEmbedList;
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return null;
+	}
+
 	public CustomEmbed getByMessageID(String messageID) {
 		CustomEmbed discordEmbed = new CustomEmbed();
 
