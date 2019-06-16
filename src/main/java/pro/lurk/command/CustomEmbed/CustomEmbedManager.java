@@ -80,9 +80,9 @@ public class CustomEmbedManager extends Command {
 			case "edit":
 				editEmbed();
 				break;
-			// TODO: Add list, copy, move, and swap.
+			// .embed list
 			case "list":
-				// listEmbeds();
+				listEmbeds();
 				break;
 			// .embed delete
 			case "delete":
@@ -96,6 +96,7 @@ public class CustomEmbedManager extends Command {
 			case "field":
 				modifyFields();
 				break;
+			// TODO: Add list, copy, move, and swap.
 			case "copy":
 				break;
 			case "move":
@@ -161,6 +162,22 @@ public class CustomEmbedManager extends Command {
 		}
 	}
 
+	// List all the embeds in the database.
+	private void listEmbeds() {
+
+		if (userMessageLower.equals(".embed list")) {
+			// Creates CustomEmbed from parse, sends it to Discord while recording it's
+			// message id, then saving to database.
+			ArrayList<String> customEmbedList = new ArrayList<String>();
+			customEmbedList = db.getListOfCustomEmbeds();
+
+			String formattedEmbeds = String.join(", ", customEmbedList);
+			channel.sendMessageFormat("%s, Here is a list of the custom embeds in the database: %s.",
+					author.getAsMention(), formattedEmbeds).queue();
+			return;
+		}
+	}
+
 	// Use this to delete an embed from Discord and the db.
 	private void deleteEmbed() {
 		// If the user has passed no additional arguments provide error message
@@ -214,28 +231,27 @@ public class CustomEmbedManager extends Command {
 			String commandOperator = args[2].toLowerCase();
 
 			switch (commandOperator) {
-			// .embed field -t meow -add -ft meow -fd meow2
-			// .embed field -add -t meow -ft meow -fd meow2
+			// .embed field add -t meow -ft meow -fd meow2
 			case "add":
 				addField();
 				break;
 			// Command Syntax:
-			// .embed field -t meow -edit -ft meow -ft meow2 -fd meow3
+			// .embed field edit -t meow -ft meow -ft meow2 -fd meow3
 			case "edit":
 				editField();
 				break;
 			// Command Syntax:
-			// .embed field -t meow -insert NUMBER -ft meow
+			// .embed field -insert [#] -t meow -ft meow
 			case "-insert":
 				insertField();
 				break;
 			// Command Syntax:
-			// .embed field -t meow -swap 0 3
+			// .embed field -swap [#] [#] -t meow
 			case "-swap":
 				swapField();
 				break;
 			// Command Syntax:
-			// .embed field -t meow -delete -ft meow
+			// .embed field delete -t meow -ft meow
 			case "delete":
 				deleteField();
 				break;
@@ -512,7 +528,7 @@ public class CustomEmbedManager extends Command {
 		// When the user has entered enough arguments 3 or more items.
 		// Ex: .embed add -t Cool Links
 		if (args[1].equals("add") || args[1].equals("edit") || args[1].equals("delete") || args[1].equals("forceupdate")
-				|| args[1].equals("field")) {
+				|| args[1].equals("field") || args[1].equals("list")) {
 			return true;
 		} else {
 			return false;
